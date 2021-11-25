@@ -8,6 +8,7 @@ public class ExampleModelVersoConverter {
 	}
 
 	public ExampleModel.Builder fromProtoPartial(ExampleMessage proto) {
+		//hi
 		return ExampleModel.builder()
 				.string(proto.getExampleString())
 				.int64(proto.getExampleInt64())

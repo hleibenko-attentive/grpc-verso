@@ -1,25 +1,22 @@
 package io.github.heldev.verso.grpc.processor;
 
-import lombok.Value;
-
 import java.util.List;
 
 
-@Value(staticConstructor = "of")
 public final class DefinitionCatalog {
 	private final List<MessageDefinition> messageDefinitions;
 
-//	private DefinitionCatalog(List<MessageDefinition> messageDefinitions) {
-//		this.messageDefinitions = messageDefinitions;
-//	}
-//
-//	public static DefinitionCatalog of(List<MessageDefinition> messageDefinitions) {
-//		return new DefinitionCatalog(messageDefinitions);
-//	}
-//
-//	public List<MessageDefinition> getMessageDefinitions() {
-//		return messageDefinitions;
-//	}
+	private DefinitionCatalog(List<MessageDefinition> messageDefinitions) {
+		this.messageDefinitions = messageDefinitions;
+	}
+
+	public static DefinitionCatalog of(List<MessageDefinition> messageDefinitions) {
+		return new DefinitionCatalog(messageDefinitions);
+	}
+
+	public List<MessageDefinition> getMessageDefinitions() {
+		return messageDefinitions;
+	}
 
 }
 
