@@ -7,6 +7,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,7 +23,8 @@ public class VersoProcessor extends AbstractProcessor {
 
 	@Override
 	public synchronized void init(ProcessingEnvironment processingEnv) {
-		throw new RuntimeException("failed i");
+		System.out.println("d");
+//		throw new RuntimeException("failed i");
 //		super.init(processingEnv);
 //		System.out.println("\n\n\n\t\t\tINITME\n\n\n");
 //		generator = new Generator(new DefinitionLoader(), new TargetConverterRenderer());
@@ -32,15 +34,16 @@ public class VersoProcessor extends AbstractProcessor {
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 		System.out.println("\n\n\n\t\t\tTESTME\n\n\n");
 
-		throw new RuntimeException("failed p");
+//		throw new RuntimeException("failed p");
 
 //		System.out.println(generator.generate(annotations, roundEnv));
-//		return false;
+		return true;
 	}
 
 	@Override
 	public Set<String> getSupportedAnnotationTypes() {
-		throw new RuntimeException("failed s");
+		return new HashSet<>();
+//		throw new RuntimeException("failed s");
 
 //		return Stream.of(VersoClass.class).map(Class::getCanonicalName).collect(toSet());
 	}
