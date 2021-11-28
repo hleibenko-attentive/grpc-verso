@@ -14,13 +14,14 @@ public final class ExampleModel {
 		System.out.println("hi p");
 	}
 
-	private final String string;
-	private final long int64;
-	private final UUID uuid;
-
 	public static Builder builder() {
 		return new Builder();
 	}
+
+	private final String string;
+	private final long int64;
+
+	private final UUID uuid;
 
 	public ExampleModel(String string, long int64, UUID uuid) {
 		this.string = string;
@@ -28,7 +29,7 @@ public final class ExampleModel {
 		this.uuid = uuid;
 	}
 
-	@VersoProperty(id = 1, nameCheck = "example_ field")
+	@VersoProperty(id = 1, nameCheck = "example_field")
 	public String getString() {
 		return string;
 	}

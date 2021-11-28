@@ -4,6 +4,9 @@ import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
+import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
+import io.github.heldev.verso.grpc.processor.common.MessageDefinition;
+import io.github.heldev.verso.grpc.processor.common.MessageField;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,6 +58,7 @@ public class DefinitionLoader {
 		return MessageField.builder()
 				.id(field.getNumber())
 				.name(field.getName())
+				.type(field.getType().toString())
 				.build();
 	}
 }
