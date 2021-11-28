@@ -2,6 +2,8 @@ package io.github.heldev.verso.grpc.processor;
 
 import com.squareup.javapoet.JavaFile;
 import io.github.heldev.verso.grpc.interfaces.VersoClass;
+import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
+import io.github.heldev.verso.grpc.processor.prototranslation.Generator;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorViewModel;
 
@@ -10,7 +12,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;

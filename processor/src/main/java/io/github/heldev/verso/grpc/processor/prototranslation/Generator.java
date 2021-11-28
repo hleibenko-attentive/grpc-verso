@@ -1,7 +1,8 @@
-package io.github.heldev.verso.grpc.processor;
+package io.github.heldev.verso.grpc.processor.prototranslation;
 
 import io.github.heldev.verso.grpc.interfaces.VersoClass;
 import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
+import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetType;
 import io.github.heldev.verso.grpc.processor.prototranslation.VersoClassTranslator;

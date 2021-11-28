@@ -1,4 +1,4 @@
-package io.github.heldev.verso.grpc.processor;
+package io.github.heldev.verso.grpc.processor.common;
 
 import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;

@@ -1,6 +1,6 @@
 package io.github.heldev.verso.grpc.processor;
 
-import io.github.heldev.verso.grpc.processor.DefinitionLoader;
+import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
