@@ -1,7 +1,5 @@
 package io.github.heldev.verso.grpc.app;
 
-
-import io.testme.ExampleModelTranslator;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

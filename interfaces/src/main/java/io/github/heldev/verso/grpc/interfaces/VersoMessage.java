@@ -1,5 +1,7 @@
 package io.github.heldev.verso.grpc.interfaces;
 
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -8,6 +10,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Target(TYPE)
 @Retention(SOURCE)
-public @interface VersoClass {
+public @interface VersoMessage {
 	String value();
 }

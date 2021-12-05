@@ -11,8 +11,8 @@ public class ExampleModelVersoConverter {
 		//hi
 		return ExampleModel.builder()
 				.string(proto.getExampleString())
-				.int64(proto.getExampleInt64())
-				.uuid(CustomConverters.stringToUuid(proto.getExampleUuid()));
+				.int64(proto.getExampleInt64());
+//				.uuid(CustomConverters.stringToUuid(proto.getExampleUuid()));
 	}
 
 }

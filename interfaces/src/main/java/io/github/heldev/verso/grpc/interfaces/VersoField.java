@@ -8,8 +8,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Target(METHOD)
 @Retention(SOURCE)
-public @interface VersoProperty {
-	int id();
-
-	String nameCheck();
+public @interface VersoField {
+	int value();
 }
