@@ -3,8 +3,6 @@ package io.github.heldev.verso.grpc.processor.prototranslation.field;
 import io.github.heldev.verso.grpc.processor.prototranslation.Translator;
 import org.immutables.value.Value;
 
-import javax.lang.model.type.TypeMirror;
-
 @Value.Immutable
 public interface TranslatorFieldSource extends FieldSource {
 	static Builder builder() {

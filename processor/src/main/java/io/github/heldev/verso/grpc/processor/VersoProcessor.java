@@ -5,14 +5,8 @@ import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
 import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
-import io.github.heldev.verso.grpc.processor.prototranslation.TargetField;
-import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsViewModel;
-import io.github.heldev.verso.grpc.processor.prototranslation.TargetType;
+import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsTranslator;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
-import io.github.heldev.verso.grpc.processor.prototranslation.Translator;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.GetterFieldSource;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.TranslatorFieldSource;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -20,83 +14,52 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class VersoProcessor extends AbstractProcessor {
-	private TargetTypeTranslator targetTypeTranslator;
 	private TargetConverterRenderer targetConverterRenderer;
+	private TranslatorTranslator translatorTranslator;
+	private TargetTranslatorsTranslator targetTranslatorsTranslator;
 
 	@Override
 	public synchronized void init(ProcessingEnvironment processingEnv) {
 		super.init(processingEnv);
 
-		targetTypeTranslator = new TargetTypeTranslator(
+		translatorTranslator = new TranslatorTranslator(processingEnv.getElementUtils());
+		targetConverterRenderer = new TargetConverterRenderer();
+
+		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils(),
 				new DefinitionLoader().loadDefinitions());
 
-		targetConverterRenderer = new TargetConverterRenderer();
+		targetTranslatorsTranslator = new TargetTranslatorsTranslator(
+				targetTypeTranslator,
+				processingEnv.getTypeUtils(),
+				processingEnv.getElementUtils());
 	}
 
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+		generateTranslators(roundEnv, translatorTranslator.loadFieldTranslators(roundEnv));
+		return true;
+	}
+
+	private void generateTranslators(RoundEnvironment roundEnv, TranslatorCatalog translatorCatalog) {
 		typesIn(roundEnv.getElementsAnnotatedWith(VersoMessage.class))
 				.forEach(type -> {
-					JavaFile file = buildPrimitiveTranslator(type);
-
+					JavaFile file = targetConverterRenderer.render(targetTranslatorsTranslator.translate(translatorCatalog, type));
 					try {
 						file.writeTo(processingEnv.getFiler());
 					} catch (IOException e) {
 						processingEnv.getMessager().printMessage(ERROR, e.toString());
 					}
 				});
-
-		return true;
-	}
-
-	private JavaFile buildPrimitiveTranslator(TypeElement type) {
-		TargetType targetType = targetTypeTranslator.buildTargetType(type);
-
-		TargetTranslatorsViewModel viewModel = TargetTranslatorsViewModel.builder()
-				.javaPackage(targetType.javaPackage())
-				.name(processingEnv.getTypeUtils().asElement(targetType.type()).getSimpleName() + "Translators")
-				.targetBuilderType(targetType.builderType())
-				.targetType(targetType.type())
-				//todo null check
-				.sourceType(processingEnv.getElementUtils().getTypeElement(targetType.protoMessage()).asType())
-				.fieldSources(buildFieldSource(targetType))
-				.build();
-
-		return targetConverterRenderer.render(viewModel);
-	}
-
-	private Map<String, FieldSource> buildFieldSource(TargetType targetType) {
-		return targetType.fields().stream()
-				.collect(toMap(
-						TargetField::getter,
-						field -> {
-							if (field.getter().equals("uuid")) {
-								return TranslatorFieldSource.builder()
-										.translator(Translator.builder()
-												.location(processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.CustomTranslators").asType())
-												.method("stringToUuid")
-												.from(processingEnv.getElementUtils().getTypeElement(String.class.getCanonicalName()).asType())
-												.to(processingEnv.getElementUtils().getTypeElement(UUID.class.getCanonicalName()).asType())
-												.build())
-										.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
-										.build();
-							} else {
-								return GetterFieldSource.of(field.protobufGetter());
-							}
-						}));
 	}
 
 	@Override
