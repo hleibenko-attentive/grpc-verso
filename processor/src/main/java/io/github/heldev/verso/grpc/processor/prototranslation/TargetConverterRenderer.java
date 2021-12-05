@@ -21,13 +21,13 @@ import static javax.lang.model.element.Modifier.STATIC;
 
 public class TargetConverterRenderer {
 
-	public JavaFile render(TargetTranslatorViewModel translator) {
+	public JavaFile render(TargetTranslatorsViewModel translator) {
 		return JavaFile.builder(translator.javaPackage(), renderClass(translator))
 				.indent("\t")
 				.build();
 	}
 
-	private TypeSpec renderClass(TargetTranslatorViewModel translator) {
+	private TypeSpec renderClass(TargetTranslatorsViewModel translator) {
 		return classBuilder(translator.name())
 				.addModifiers(PUBLIC, ABSTRACT)
 				.addMethod(constructorBuilder().addModifiers(PRIVATE).build())
@@ -35,7 +35,7 @@ public class TargetConverterRenderer {
 				.build();
 	}
 
-	private MethodSpec renderToBuilderMethod(TargetTranslatorViewModel translator) {
+	private MethodSpec renderToBuilderMethod(TargetTranslatorsViewModel translator) {
 		TypeName builderType = TypeName.get(translator.targetBuilderType());
 
 		return methodBuilder("toBuilder")
@@ -47,7 +47,7 @@ public class TargetConverterRenderer {
 				.build();
 	}
 
-	private CodeBlock renderBuilderCalls(TargetTranslatorViewModel translator) {
+	private CodeBlock renderBuilderCalls(TargetTranslatorsViewModel translator) {
 		return translator.fieldSources()
 				.entrySet().stream()
 				.map(this::renderBuilderCall)

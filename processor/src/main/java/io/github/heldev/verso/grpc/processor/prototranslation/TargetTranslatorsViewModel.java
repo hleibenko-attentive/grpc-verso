@@ -8,7 +8,7 @@ import java.util.Map;
 
 
 @Value.Immutable
-public interface TargetTranslatorViewModel {
+public interface TargetTranslatorsViewModel {
 	static Builder builder() {
 		return ImmutableTargetTranslatorViewModel.builder();
 	}
@@ -27,6 +27,6 @@ public interface TargetTranslatorViewModel {
 		Builder targetType(TypeMirror targetType);
 		Builder sourceType(TypeMirror sourceType);
 		Builder fieldSources(Map<String, ? extends FieldSource> filedSources);
-		TargetTranslatorViewModel build();
+		TargetTranslatorsViewModel build();
 	}
 }

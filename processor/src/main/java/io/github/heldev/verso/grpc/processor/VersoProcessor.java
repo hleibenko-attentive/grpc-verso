@@ -6,7 +6,7 @@ import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
 import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetField;
-import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorViewModel;
+import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsViewModel;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetType;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
 import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
@@ -63,7 +63,7 @@ public class VersoProcessor extends AbstractProcessor {
 	private JavaFile buildPrimitiveTranslator(TypeElement type) {
 		TargetType targetType = targetTypeTranslator.buildTargetType(type);
 
-		TargetTranslatorViewModel viewModel = TargetTranslatorViewModel.builder()
+		TargetTranslatorsViewModel viewModel = TargetTranslatorsViewModel.builder()
 				.javaPackage(targetType.javaPackage())
 				.name(processingEnv.getTypeUtils().asElement(targetType.type()).getSimpleName() + "Translators")
 				.targetBuilderType(targetType.builderType())
