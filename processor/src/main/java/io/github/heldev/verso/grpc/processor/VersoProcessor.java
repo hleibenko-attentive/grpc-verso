@@ -65,7 +65,7 @@ public class VersoProcessor extends AbstractProcessor {
 
 		TargetTranslatorViewModel viewModel = TargetTranslatorViewModel.builder()
 				.javaPackage(targetType.javaPackage())
-				.name(processingEnv.getTypeUtils().asElement(targetType.type()).getSimpleName() + "Translator")
+				.name(processingEnv.getTypeUtils().asElement(targetType.type()).getSimpleName() + "Translators")
 				.targetBuilderType(targetType.builderType())
 				.targetType(targetType.type())
 				//todo null check
@@ -83,7 +83,7 @@ public class VersoProcessor extends AbstractProcessor {
 						field -> {
 							if (field.getter().equals("uuid")) {
 								return TranslatorFieldSource.builder()
-										.translatorClass(processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.CustomConverters").asType())
+										.translatorClass(processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.CustomTranslators").asType())
 										.method("stringToUuid")
 										.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
 										.build();

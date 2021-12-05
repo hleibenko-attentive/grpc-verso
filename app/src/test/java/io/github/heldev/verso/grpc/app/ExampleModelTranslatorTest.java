@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ExampleModelTranslatorTest {
+class ExampleModelTranslatorsTest {
 
 	@Test
 	public void populates_builder_from_proto() {
@@ -18,7 +18,7 @@ class ExampleModelTranslatorTest {
 				.setExampleUuid(uuid.toString())
 				.build();
 
-		ExampleModel.Builder result = ExampleModelTranslator.toBuilder(message);
+		ExampleModel.Builder result = ExampleModelTranslators.toBuilder(message);
 		ExampleModel.Builder expected = ExampleModel.builder()
 				.string("string")
 				.int64(64)

@@ -5,8 +5,8 @@ import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
 
 import java.util.UUID;
 
-public abstract class CustomConverters {
-	private CustomConverters() {}
+public abstract class CustomTranslators {
+	private CustomTranslators() {}
 
 	@VersoFieldTranslator
 	public static UUID stringToUuid(String source) {
