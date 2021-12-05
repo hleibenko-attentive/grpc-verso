@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class VersoProcessor extends AbstractProcessor {
@@ -40,22 +41,22 @@ public class VersoProcessor extends AbstractProcessor {
 
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-		JavaFile file = buildPrimitiveTranslator();
+		typesIn(roundEnv.getElementsAnnotatedWith(VersoMessage.class))
+				.forEach(type -> {
+					JavaFile file = buildPrimitiveTranslator(type);
 
-		if (isFirstRound(roundEnv)) {
-			try {
-				file.writeTo(processingEnv.getFiler());
-			} catch (IOException e) {
-				processingEnv.getMessager().printMessage(ERROR, e.toString());
-			}
-		}
+					try {
+						file.writeTo(processingEnv.getFiler());
+					} catch (IOException e) {
+						processingEnv.getMessager().printMessage(ERROR, e.toString());
+					}
+				});
 
 		return true;
 	}
 
-	private JavaFile buildPrimitiveTranslator() {
-		TargetType targetType = targetTypeTranslator.buildTargetType(
-				processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.ExampleModel"));
+	private JavaFile buildPrimitiveTranslator(TypeElement type) {
+		TargetType targetType = targetTypeTranslator.buildTargetType(type);
 
 		TargetTranslatorViewModel viewModel = TargetTranslatorViewModel.builder()
 				.javaPackage(targetType.javaPackage())
@@ -67,10 +68,6 @@ public class VersoProcessor extends AbstractProcessor {
 				.build();
 
 		return targetConverterRenderer.render(viewModel);
-	}
-
-	private boolean isFirstRound(RoundEnvironment roundEnv) {
-		return roundEnv.getRootElements().size() > 2;
 	}
 
 	@Override

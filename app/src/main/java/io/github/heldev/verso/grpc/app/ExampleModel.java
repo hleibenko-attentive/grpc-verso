@@ -25,7 +25,6 @@ public abstract class ExampleModel {
 	public interface Builder {
 		Builder string(String string);
 		Builder int64(long int64);
-
 		Builder uuid(UUID uuid);
 
 		ExampleModel build();
