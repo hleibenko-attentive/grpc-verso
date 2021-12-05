@@ -6,6 +6,7 @@ import io.github.heldev.verso.grpc.processor.prototranslation.field.GetterFieldS
 import io.github.heldev.verso.grpc.processor.prototranslation.field.TranslatorFieldSource;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.Map;
@@ -48,13 +49,23 @@ public class TargetTranslatorsTranslator {
 						field -> {
 							if (field.getter().equals("uuid")) {
 								return TranslatorFieldSource.builder()
-										.translator(translatorCatalog.findTranslator()
-												.orElseThrow(() -> new RuntimeException("can't find translator for " + targetType)))
+										.translator(getTranslator(translatorCatalog, targetType, field))
 										.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
 										.build();
 							} else {
 								return GetterFieldSource.of(field.protobufGetter());
 							}
 						}));
+	}
+
+	private Translator getTranslator(
+			TranslatorCatalog translatorCatalog,
+			TargetType targetType,
+			TargetField field) {
+		TypeMirror from = elementUtils.getTypeElement(String.class.getCanonicalName()).asType();
+
+		return translatorCatalog
+				.findTranslator(typeUtils, from, field.type())
+				.orElseThrow(() -> new RuntimeException("can't find translator for " + targetType));
 	}
 }

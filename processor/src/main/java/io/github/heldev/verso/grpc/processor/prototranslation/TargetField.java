@@ -6,25 +6,25 @@ import org.immutables.value.Value;
 import javax.lang.model.type.TypeMirror;
 
 @Value.Immutable
-public interface TargetField {
-	static Builder builder() {
+public abstract class TargetField {
+	public static Builder builder() {
 		return ImmutableTargetField.builder();
 	}
 
-	String getter();
-	TypeMirror type();
-	String protobufGetter();
+	public abstract String getter();
+	public abstract TypeMirror type();
+	public abstract String protobufGetter();
 
 
 	@Value.Check
-	default void check() {
+	protected void check() {
 		if (getter().trim().isEmpty()) {
 			throw new RuntimeException(this + " has an empty proto message");
 		}
 	}
 
 
-	interface Builder {
+	public interface Builder {
 		Builder getter(String name);
 		Builder type(TypeMirror type);
 		Builder protobufGetter(String protobufGetter);
