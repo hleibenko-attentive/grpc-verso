@@ -1,5 +1,6 @@
 package io.github.heldev.verso.grpc.processor.prototranslation.field;
 
+import io.github.heldev.verso.grpc.processor.prototranslation.Translator;
 import org.immutables.value.Value;
 
 import javax.lang.model.type.TypeMirror;
@@ -10,13 +11,11 @@ public interface TranslatorFieldSource extends FieldSource {
 		return ImmutableTranslatorFieldSource.builder();
 	}
 
-	TypeMirror translatorClass();
-	String method();
+	Translator translator();
 	FieldSource underlyingSource();
 
 	interface Builder {
-		Builder translatorClass(TypeMirror translatorClass);
-		Builder method(String method);
+		Builder translator(Translator translator);
 		Builder underlyingSource(FieldSource underlyingSource);
 
 		TranslatorFieldSource build();

@@ -68,8 +68,8 @@ public class TargetConverterRenderer {
 			TranslatorFieldSource source = (TranslatorFieldSource) fieldSource;
 
 			return CodeBlock.of("$T.$L($L)",
-					TypeName.get(source.translatorClass()),
-					source.method(),
+					TypeName.get(source.translator().location()),
+					source.translator().method(),
 					renderFieldSource(source.underlyingSource()));
 		} else {
 			throw new RuntimeException("Unknown field source, it's a bug:" + fieldSource);

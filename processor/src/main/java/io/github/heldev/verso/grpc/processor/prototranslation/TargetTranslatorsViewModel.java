@@ -10,7 +10,7 @@ import java.util.Map;
 @Value.Immutable
 public interface TargetTranslatorsViewModel {
 	static Builder builder() {
-		return ImmutableTargetTranslatorViewModel.builder();
+		return ImmutableTargetTranslatorsViewModel.builder();
 	}
 
 	String javaPackage();

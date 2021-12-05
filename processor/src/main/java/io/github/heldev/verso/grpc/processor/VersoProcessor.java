@@ -9,6 +9,7 @@ import io.github.heldev.verso.grpc.processor.prototranslation.TargetField;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsViewModel;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetType;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
+import io.github.heldev.verso.grpc.processor.prototranslation.Translator;
 import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
 import io.github.heldev.verso.grpc.processor.prototranslation.field.GetterFieldSource;
 import io.github.heldev.verso.grpc.processor.prototranslation.field.TranslatorFieldSource;
@@ -21,6 +22,7 @@ import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
@@ -83,8 +85,12 @@ public class VersoProcessor extends AbstractProcessor {
 						field -> {
 							if (field.getter().equals("uuid")) {
 								return TranslatorFieldSource.builder()
-										.translatorClass(processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.CustomTranslators").asType())
-										.method("stringToUuid")
+										.translator(Translator.builder()
+												.location(processingEnv.getElementUtils().getTypeElement("io.github.heldev.verso.grpc.app.CustomTranslators").asType())
+												.method("stringToUuid")
+												.from(processingEnv.getElementUtils().getTypeElement(String.class.getCanonicalName()).asType())
+												.to(processingEnv.getElementUtils().getTypeElement(UUID.class.getCanonicalName()).asType())
+												.build())
 										.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
 										.build();
 							} else {
