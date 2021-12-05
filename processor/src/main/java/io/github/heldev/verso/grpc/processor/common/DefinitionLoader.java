@@ -4,11 +4,13 @@ import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
-import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
-import io.github.heldev.verso.grpc.processor.common.MessageDefinition;
-import io.github.heldev.verso.grpc.processor.common.MessageField;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -26,10 +28,11 @@ public class DefinitionLoader {
 	}
 
 	private FileDescriptorSet load() {
+		Path path = Paths.get("/tmp/grpc-verso/descriptors.protobin");
 		try {
-			return FileDescriptorSet.parseFrom(getClass().getClassLoader().getResourceAsStream("fds.pb"));
+			return FileDescriptorSet.parseFrom(Files.readAllBytes(path));
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 	}
 

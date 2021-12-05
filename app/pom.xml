@@ -88,12 +88,6 @@
 			<scope>test</scope>
 		</dependency>
 
-<!--		<dependency>-->
-<!--			<groupId>org.projectlombok</groupId>-->
-<!--			<artifactId>lombok</artifactId>-->
-<!--			<version>1.18.22</version>-->
-<!--			<scope>provided</scope>-->
-<!--		</dependency>-->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
@@ -119,6 +113,10 @@
 					<protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
 					<pluginId>grpc-java</pluginId>
 					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+					<writeDescriptorSet>true</writeDescriptorSet>
+					<includeDependenciesInDescriptorSet>true</includeDependenciesInDescriptorSet>
+					<descriptorSetFileName>descriptors.protobin</descriptorSetFileName>
+					<descriptorSetOutputDirectory>/tmp/grpc-verso</descriptorSetOutputDirectory>
 				</configuration>
 				<executions>
 					<execution>
@@ -126,6 +124,7 @@
 							<goal>compile</goal>
 							<goal>compile-custom</goal>
 						</goals>
+						<phase>generate-sources</phase>
 					</execution>
 				</executions>
 			</plugin>

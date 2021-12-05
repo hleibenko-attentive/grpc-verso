@@ -10,21 +10,25 @@ class ExampleModelTranslatorTest {
 
 	@Test
 	public void populates_builder_from_proto() {
+		UUID uuid = UUID.fromString("dd62f4c3-c337-42e5-9491-85ba4ef0b0dc");
+
 		ExampleMessage message = ExampleMessage.newBuilder()
 				.setExampleString("string")
 				.setExampleInt64(64)
+				.setExampleUuid(uuid.toString())
 				.build();
 
 		ExampleModel.Builder result = ExampleModelTranslator.toBuilder(message);
 		ExampleModel.Builder expected = ExampleModel.builder()
 				.string("string")
-				.int64(64);
+				.int64(64)
+				.uuid(uuid);
 
 		assertThat(fillMissingDataAndBuild(result))
 				.isEqualTo(fillMissingDataAndBuild(expected));
 	}
 
 	private ExampleModel fillMissingDataAndBuild(ExampleModel.Builder builder) {
-		return builder.uuid(UUID.fromString("0-0-0-0-0")).build();
+		return builder.build();
 	}
 }

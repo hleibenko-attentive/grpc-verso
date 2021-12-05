@@ -5,6 +5,9 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
+import io.github.heldev.verso.grpc.processor.prototranslation.field.GetterFieldSource;
+import io.github.heldev.verso.grpc.processor.prototranslation.field.TranslatorFieldSource;
 
 import java.util.Map;
 
@@ -51,10 +54,25 @@ public class TargetConverterRenderer {
 				.collect(CodeBlock.joining("\n"));
 	}
 
-	private CodeBlock renderBuilderCall(Map.Entry<String, String> fieldWithSource) {
+	private CodeBlock renderBuilderCall(Map.Entry<String, FieldSource> fieldWithSource) {
 		return CodeBlock.of(
-				".$L(message.$L())",
+				".$L($L)",
 				fieldWithSource.getKey(),
-				fieldWithSource.getValue());
+				renderFieldSource(fieldWithSource.getValue()));
+	}
+
+	private CodeBlock renderFieldSource(FieldSource fieldSource) {
+		if (fieldSource instanceof GetterFieldSource) {
+			return CodeBlock.of("message.$L()", ((GetterFieldSource) fieldSource).name());
+		} else if (fieldSource instanceof TranslatorFieldSource) {
+			TranslatorFieldSource source = (TranslatorFieldSource) fieldSource;
+
+			return CodeBlock.of("$T.$L($L)",
+					TypeName.get(source.translatorClass()),
+					source.method(),
+					renderFieldSource(source.underlyingSource()));
+		} else {
+			throw new RuntimeException("Unknown field source, it's a bug:" + fieldSource);
+		}
 	}
 }

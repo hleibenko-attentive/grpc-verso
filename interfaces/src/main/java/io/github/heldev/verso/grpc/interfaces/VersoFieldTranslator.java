@@ -3,11 +3,11 @@ package io.github.heldev.verso.grpc.interfaces;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-@Target(TYPE)
+@Target(METHOD)
 @Retention(SOURCE)
-public @interface VersoMessage {
-	String value();
+public @interface VersoFieldTranslator {
+	String value() default "";
 }

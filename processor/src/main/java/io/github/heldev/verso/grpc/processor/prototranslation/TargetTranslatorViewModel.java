@@ -1,12 +1,11 @@
 package io.github.heldev.verso.grpc.processor.prototranslation;
 
-
-import com.squareup.javapoet.TypeName;
+import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
 import org.immutables.value.Value;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.Map;
-import java.util.zip.ZipFile;
+
 
 @Value.Immutable
 public interface TargetTranslatorViewModel {
@@ -19,7 +18,7 @@ public interface TargetTranslatorViewModel {
 	TypeMirror targetBuilderType();
 	TypeMirror targetType();
 	TypeMirror sourceType();
-	Map<String, String> fieldSources();
+	Map<String, FieldSource> fieldSources();
 
 	interface Builder {
 		Builder javaPackage(String javaPackage);
@@ -27,7 +26,7 @@ public interface TargetTranslatorViewModel {
 		Builder targetBuilderType(TypeMirror targetBuilderType);
 		Builder targetType(TypeMirror targetType);
 		Builder sourceType(TypeMirror sourceType);
-		Builder fieldSources(Map<String, ? extends String> filedSources);
+		Builder fieldSources(Map<String, ? extends FieldSource> filedSources);
 		TargetTranslatorViewModel build();
 	}
 }

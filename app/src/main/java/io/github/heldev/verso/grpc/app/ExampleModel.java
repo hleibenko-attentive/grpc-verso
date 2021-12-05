@@ -6,7 +6,11 @@ import org.immutables.value.Value;
 
 import java.util.UUID;
 
-@VersoMessage("io.github.heldev.grpcverso.ExampleMessage")
+import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_INT64_FIELD_NUMBER;
+import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_STRING_FIELD_NUMBER;
+import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_UUID_FIELD_NUMBER;
+
+@VersoMessage("io.github.heldev.verso.grpc.app.ExampleMessage")
 @Value.Immutable
 public abstract class ExampleModel {
 
@@ -14,12 +18,13 @@ public abstract class ExampleModel {
 		return ImmutableExampleModel.builder();
 	}
 
-	@VersoField(ExampleMessage.EXAMPLE_STRING_FIELD_NUMBER)
+	@VersoField(EXAMPLE_STRING_FIELD_NUMBER)
 	public abstract String string();
 
-	@VersoField(ExampleMessage.EXAMPLE_INT64_FIELD_NUMBER)
+	@VersoField(EXAMPLE_INT64_FIELD_NUMBER)
 	public abstract long int64();
 
+	@VersoField(EXAMPLE_UUID_FIELD_NUMBER)
 	public abstract UUID uuid();
 
 	public interface Builder {
