@@ -1,7 +1,9 @@
 package io.github.heldev.verso.grpc.app;
 
+import com.google.protobuf.Timestamp;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
@@ -19,6 +21,7 @@ class ExampleModelTranslatorsTest {
 				.setExampleInt64(64)
 				.setExampleUuid(uuid.toString())
 				.setIsoDateTime("2007-12-03T10:15:30")
+				.setTimestamp(Timestamp.newBuilder().setSeconds(100).setNanos(5).build())
 				.build();
 
 		ExampleModel.Builder result = ExampleModelTranslators.toBuilder(message);
@@ -27,7 +30,8 @@ class ExampleModelTranslatorsTest {
 				.int64(64)
 				.uuid(uuid)
 				.date(LocalDate.parse("2007-12-03"))
-				.time(LocalTime.parse("10:15:30"));
+				.time(LocalTime.parse("10:15:30"))
+				.instant(Instant.ofEpochSecond(100, 5));
 
 		assertThat(fillMissingDataAndBuild(result))
 				.isEqualTo(fillMissingDataAndBuild(expected));

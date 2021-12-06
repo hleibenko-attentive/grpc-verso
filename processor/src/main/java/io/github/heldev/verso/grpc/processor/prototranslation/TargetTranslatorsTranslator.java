@@ -66,10 +66,9 @@ public class TargetTranslatorsTranslator {
 			TranslatorCatalog translatorCatalog,
 			TargetType targetType,
 			TargetField field) {
-		TypeMirror from = elementUtils.getTypeElement(String.class.getCanonicalName()).asType();
 
 		return translatorCatalog
-				.findTranslator(typeUtils, from, field.type())
+				.findTranslator(typeUtils, field.protobufType(), field.type())
 				.orElseThrow(() -> new RuntimeException("can't find translator for " + targetType));
 	}
 }

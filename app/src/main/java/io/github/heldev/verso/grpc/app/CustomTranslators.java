@@ -1,8 +1,11 @@
 package io.github.heldev.verso.grpc.app;
 
 
+import com.google.protobuf.Timestamp;
+import com.google.protobuf.util.Timestamps;
 import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,5 +27,10 @@ public abstract class CustomTranslators {
 	@VersoFieldTranslator
 	public static LocalTime stringToLocalTime(String isoDateTime) {
 		return LocalDateTime.parse(isoDateTime).toLocalTime();
+	}
+
+	@VersoFieldTranslator
+	public static Instant timestampToInstant(Timestamp timestamp) {
+		return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
 	}
 }
