@@ -2,6 +2,8 @@ package io.github.heldev.verso.grpc.app;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,13 +18,16 @@ class ExampleModelTranslatorsTest {
 				.setExampleString("string")
 				.setExampleInt64(64)
 				.setExampleUuid(uuid.toString())
+				.setIsoDateTime("2007-12-03T10:15:30")
 				.build();
 
 		ExampleModel.Builder result = ExampleModelTranslators.toBuilder(message);
 		ExampleModel.Builder expected = ExampleModel.builder()
 				.string("string")
 				.int64(64)
-				.uuid(uuid);
+				.uuid(uuid)
+				.date(LocalDate.parse("2007-12-03"))
+				.time(LocalTime.parse("10:15:30"));
 
 		assertThat(fillMissingDataAndBuild(result))
 				.isEqualTo(fillMissingDataAndBuild(expected));
