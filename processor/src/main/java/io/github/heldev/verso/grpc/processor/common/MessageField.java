@@ -2,6 +2,8 @@ package io.github.heldev.verso.grpc.processor.common;
 
 import org.immutables.value.Value;
 
+import javax.lang.model.type.TypeMirror;
+
 @Value.Immutable
 public interface MessageField {
 	static Builder builder() {
@@ -17,7 +19,7 @@ public interface MessageField {
 		return false;
 	}
 
-	String type();
+	TypeMirror type();
 
 	interface Builder {
 		Builder id(int id);
@@ -26,7 +28,7 @@ public interface MessageField {
 
 		Builder isOptional(boolean isOptional);
 
-		Builder type(String type);
+		Builder type(TypeMirror type);
 
 		MessageField build();
 	}

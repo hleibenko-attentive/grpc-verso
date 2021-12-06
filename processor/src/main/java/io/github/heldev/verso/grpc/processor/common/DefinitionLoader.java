@@ -5,8 +5,11 @@ import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
 
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +20,13 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toList;
 
 public class DefinitionLoader {
+	private final Types typeUtils;
+	private final Elements elementUtils;
+
+	public DefinitionLoader(Types typeUtils, Elements elementUtils) {
+		this.typeUtils = typeUtils;
+		this.elementUtils = elementUtils;
+	}
 
 	public DefinitionCatalog loadDefinitions() {
 		List<MessageDefinition> messageDefinitions = load()
@@ -61,7 +71,40 @@ public class DefinitionLoader {
 		return MessageField.builder()
 				.id(field.getNumber())
 				.name(field.getName())
-				.type(field.getType().toString())
+				.type(getJavaTypeFromProtobufType(field))
 				.build();
+	}
+
+	private TypeMirror getJavaTypeFromProtobufType(FieldDescriptorProto field) {
+		switch (field.getType()) {
+			case TYPE_DOUBLE:
+				return typeUtils.getPrimitiveType(TypeKind.DOUBLE);
+			case TYPE_FLOAT:
+				return typeUtils.getPrimitiveType(TypeKind.FLOAT);
+			case TYPE_INT64:
+			case TYPE_UINT64:
+				return typeUtils.getPrimitiveType(TypeKind.LONG);
+			case TYPE_INT32:
+			case TYPE_UINT32:
+				return typeUtils.getPrimitiveType(TypeKind.INT);
+			case TYPE_BOOL:
+				return typeUtils.getPrimitiveType(TypeKind.BOOLEAN);
+			case TYPE_STRING:
+				return elementUtils.getTypeElement(String.class.getCanonicalName()).asType();
+			case TYPE_MESSAGE:
+				return elementUtils.getTypeElement(field.getTypeName().replaceFirst("^\\.", "com.")).asType();
+			case TYPE_BYTES:
+				return typeUtils.getArrayType(typeUtils.getPrimitiveType(TypeKind.BYTE));
+			case TYPE_FIXED64:
+			case TYPE_FIXED32:
+			case TYPE_GROUP:
+			case TYPE_ENUM:
+			case TYPE_SFIXED32:
+			case TYPE_SFIXED64:
+			case TYPE_SINT32:
+			case TYPE_SINT64:
+			default:
+				throw new RuntimeException(field + " type is not supported yet");
+		}
 	}
 }

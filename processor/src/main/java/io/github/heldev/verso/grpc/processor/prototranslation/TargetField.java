@@ -5,6 +5,7 @@ import org.immutables.value.Value;
 
 import javax.lang.model.type.TypeMirror;
 
+//todo it does not represent target fields anymore
 @Value.Immutable
 public abstract class TargetField {
 	public static Builder builder() {
@@ -14,6 +15,7 @@ public abstract class TargetField {
 	public abstract String getter();
 	public abstract TypeMirror type();
 	public abstract String protobufGetter();
+	public abstract TypeMirror protobufType();
 
 
 	@Value.Check
@@ -23,11 +25,11 @@ public abstract class TargetField {
 		}
 	}
 
-
 	public interface Builder {
 		Builder getter(String name);
 		Builder type(TypeMirror type);
 		Builder protobufGetter(String protobufGetter);
+		Builder protobufType(TypeMirror protobufType);
 		TargetField build();
 	}
 }

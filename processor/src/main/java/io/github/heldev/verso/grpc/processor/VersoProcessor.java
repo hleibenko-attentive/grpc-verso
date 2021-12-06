@@ -33,10 +33,15 @@ public class VersoProcessor extends AbstractProcessor {
 		translatorTranslator = new TranslatorTranslator(processingEnv.getElementUtils());
 		targetConverterRenderer = new TargetConverterRenderer();
 
+		DefinitionLoader definitionLoader = new DefinitionLoader(
+				processingEnv.getTypeUtils(),
+				processingEnv.getElementUtils());
+
 		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils(),
-				new DefinitionLoader().loadDefinitions());
+				//todo parsing doesn't seem to be the best activity for DI context initialization
+				definitionLoader.loadDefinitions());
 
 		targetTranslatorsTranslator = new TargetTranslatorsTranslator(
 				targetTypeTranslator,

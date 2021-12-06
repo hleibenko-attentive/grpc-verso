@@ -46,16 +46,20 @@ public class TargetTranslatorsTranslator {
 		return targetType.fields().stream()
 				.collect(toMap(
 						TargetField::getter,
-						field -> {
-							if (field.getter().equals("uuid")) {
-								return TranslatorFieldSource.builder()
-										.translator(getTranslator(translatorCatalog, targetType, field))
-										.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
-										.build();
-							} else {
-								return GetterFieldSource.of(field.protobufGetter());
-							}
-						}));
+						field -> buildFieldSource(translatorCatalog, targetType, field)));
+	}
+
+	private FieldSource buildFieldSource(
+			TranslatorCatalog translatorCatalog,
+			TargetType targetType,
+			TargetField field) {
+
+		return typeUtils.isSameType(field.type(), field.protobufType())
+				? GetterFieldSource.of(field.protobufGetter())
+				: TranslatorFieldSource.builder()
+						.translator(getTranslator(translatorCatalog, targetType, field))
+						.underlyingSource(GetterFieldSource.of(field.protobufGetter()))
+						.build();
 	}
 
 	private Translator getTranslator(

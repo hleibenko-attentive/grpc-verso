@@ -14,12 +14,13 @@ public abstract class DefinitionCatalog {
 				.build();
 	}
 
-	public Optional<String> findFieldByMessageAndId(String messageQualifiedName, int fieldId) {
+	public Optional<MessageField> findFieldByMessageAndId(String messageQualifiedName, int fieldId) {
 		return messageDefinitions().stream()
 				.filter(message -> message.qualifiedName().equals(messageQualifiedName))
 				.findAny()
-				.flatMap(message -> message.findFieldById(fieldId).map(MessageField::name));
+				.flatMap(message -> message.findFieldById(fieldId));
 	}
+
 
 	protected abstract List<MessageDefinition> messageDefinitions();
 }

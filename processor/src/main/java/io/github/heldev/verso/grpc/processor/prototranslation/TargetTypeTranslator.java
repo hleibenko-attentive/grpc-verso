@@ -3,6 +3,7 @@ package io.github.heldev.verso.grpc.processor.prototranslation;
 import io.github.heldev.verso.grpc.interfaces.VersoField;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
+import io.github.heldev.verso.grpc.processor.common.MessageField;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -10,6 +11,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -56,19 +58,24 @@ public class TargetTypeTranslator {
 	}
 
 	private TargetField buildField(String messageQualifiedName, ExecutableElement method) {
+		MessageField field = findMessageFieldById(messageQualifiedName, method)
+				.orElseThrow(() -> new RuntimeException(
+						"can't find field in " + messageQualifiedName + " matching " + method));
+
 		return TargetField.builder()
 				.getter(method.getSimpleName().toString())
 				.type(method.getReturnType())
-				.protobufGetter(getProtobufGetter(messageQualifiedName, method).toString())
+				.protobufGetter(getProtobufGetter(field.name()))
+				.protobufType(field.type())
 				.build();
 	}
 
-	private CharSequence getProtobufGetter(String messageQualifiedName, ExecutableElement method) {
-		int fieldId = method.getAnnotation(VersoField.class).value();
+	private Optional<MessageField> findMessageFieldById(
+			String messageQualifiedName,
+			ExecutableElement method) {
 
-		return definitionCatalog.findFieldByMessageAndId(messageQualifiedName, fieldId)
-				.map(this::getProtobufGetter)
-				.orElseThrow(() -> new RuntimeException(messageQualifiedName + " has no field id " + fieldId));
+		int fieldId = method.getAnnotation(VersoField.class).value();
+		return definitionCatalog.findFieldByMessageAndId(messageQualifiedName, fieldId);
 	}
 
 	/**
