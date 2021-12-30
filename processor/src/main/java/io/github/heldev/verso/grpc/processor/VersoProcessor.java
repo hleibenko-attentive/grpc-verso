@@ -14,6 +14,8 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -62,7 +64,9 @@ public class VersoProcessor extends AbstractProcessor {
 					try {
 						file.writeTo(processingEnv.getFiler());
 					} catch (IOException e) {
-						processingEnv.getMessager().printMessage(ERROR, e.toString());
+						StringWriter stringWriter = new StringWriter();
+						e.printStackTrace(new PrintWriter(stringWriter));
+						processingEnv.getMessager().printMessage(ERROR, stringWriter.toString());
 					}
 				});
 	}

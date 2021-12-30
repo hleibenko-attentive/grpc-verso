@@ -1,10 +1,9 @@
 package io.github.heldev.verso.grpc.processor.prototranslation;
 
-import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
 import org.immutables.value.Value;
 
 import javax.lang.model.type.TypeMirror;
-import java.util.Map;
+import java.util.List;
 
 
 @Value.Immutable
@@ -16,9 +15,15 @@ public interface TargetTranslatorsViewModel {
 	String javaPackage();
 	String name();
 	TypeMirror targetBuilderType();
+
+	default String builderFactoryMethod() {
+		return "builder";
+	}
+
 	TypeMirror targetType();
 	TypeMirror sourceType();
-	Map<String, FieldSource> fieldSources();
+	List<AttributeViewModel> optionalAttributesWithNonOptionalArguments();
+	List<AttributeViewModel> otherAttributes();
 
 	interface Builder {
 		Builder javaPackage(String javaPackage);
@@ -26,7 +31,8 @@ public interface TargetTranslatorsViewModel {
 		Builder targetBuilderType(TypeMirror targetBuilderType);
 		Builder targetType(TypeMirror targetType);
 		Builder sourceType(TypeMirror sourceType);
-		Builder fieldSources(Map<String, ? extends FieldSource> filedSources);
+		Builder optionalAttributesWithNonOptionalArguments(Iterable<? extends AttributeViewModel> attributes);
+		Builder otherAttributes(Iterable<? extends AttributeViewModel> attributes);
 		TargetTranslatorsViewModel build();
 	}
 }

@@ -8,6 +8,7 @@ import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
@@ -24,7 +25,7 @@ public abstract class TranslatorCatalog {
 	public Optional<Translator> findTranslator(Types typeUtils, TypeMirror from, TypeMirror to) {
 		return translators().stream()
 				.filter(translator -> matchesTypes(typeUtils, from, to, translator))
-				.collect(collectingAndThen(toList(), this::ensureAtMostOne));
+				.collect(collectingAndThen(toList(), matches -> ensureAtMostOne(matches, from, to)));
 	}
 
 	private boolean matchesTypes(
@@ -36,11 +37,18 @@ public abstract class TranslatorCatalog {
 				&& typeUtils.isSameType(translator.to(), to);
 	}
 
-	private Optional<Translator> ensureAtMostOne(List<Translator> matches) {
+	private Optional<Translator> ensureAtMostOne(
+			List<Translator> matches,
+			TypeMirror from,
+			TypeMirror to) {
 		if (matches.size() == 1) {
 			return matches.stream().findFirst();
 		} else {
-			throw new RuntimeException("there should be exactly one matching translator but found " + matches);
+			throw new RuntimeException(format(
+					"there should be exactly one translator from %s to %s but found %s",
+					from,
+					to,
+					matches));
 		}
 	}
 }

@@ -5,11 +5,8 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.FieldSource;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.GetterFieldSource;
-import io.github.heldev.verso.grpc.processor.prototranslation.field.TranslatorFieldSource;
 
-import java.util.Map;
+import java.util.Optional;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -42,37 +39,82 @@ public class TargetConverterRenderer {
 				.addModifiers(PUBLIC, STATIC)
 				.returns(builderType)
 				.addParameter(TypeName.get(translator.sourceType()), "message")
-				.addCode("return $T.builder()\n\t\t", TypeName.get(translator.targetType()))
-				.addStatement(renderBuilderCalls(translator))
+				//todo `return $T.$L()` when there no other builder calls
+				.addStatement("$T builder = $T.$L()",
+						builderType,
+						TypeName.get(translator.targetType()),
+						translator.builderFactoryMethod())
+				.addStatement(renderFluentBuilderCalls(translator))
+				.addCode(renderOtherBuilderCalls(translator))
+				.addStatement("return builder")
 				.build();
 	}
 
-	private CodeBlock renderBuilderCalls(TargetTranslatorsViewModel translator) {
-		return translator.fieldSources()
-				.entrySet().stream()
-				.map(this::renderBuilderCall)
+	private CodeBlock renderFluentBuilderCalls(TargetTranslatorsViewModel translator) {
+		return translator.otherAttributes().isEmpty()
+				? CodeBlock.of("")
+				: translator.otherAttributes()
+						.stream()
+						.map(this::renderFluentBuilderCall)
+						.collect(CodeBlock.joining("\n", "builder", ""));
+	}
+
+	private CodeBlock renderFluentBuilderCall(AttributeViewModel attribute) {
+		return CodeBlock.of(
+				".$L($L)",
+				attribute.builderSetter(),
+				renderFluentBuilderArgument(attribute));
+	}
+
+	private CodeBlock renderFluentBuilderArgument(AttributeViewModel attribute) {
+		return attribute.sourcePresenceCheckingMethod()
+				.map(presenceChecker -> renderOptionalArgument(attribute, presenceChecker))
+				.orElseGet(() -> renderSetterArgument(attribute));
+	}
+
+	private CodeBlock renderOptionalArgument(AttributeViewModel attribute, String presenceChecker) {
+		return CodeBlock.builder()
+				.add("$T.of($L).filter(ignored -> message.$L())"
+						, Optional.class
+						, renderSourceGetter(attribute)
+						, presenceChecker)
+				.add(attribute.translator()
+						.map(translator -> CodeBlock.of(".map($T::$L)"
+								, TypeName.get(translator.clazz())
+								, translator.method()))
+						.orElseGet(CodeBlock.builder()::build))
+				.build();
+	}
+
+	private CodeBlock renderOtherBuilderCalls(TargetTranslatorsViewModel translator) {
+		return translator.optionalAttributesWithNonOptionalArguments()
+				.stream()
+				.map(attribute -> attribute.sourcePresenceCheckingMethod()
+						.map(presenceChecker -> CodeBlock.builder()
+								.beginControlFlow("if (message.$L())", presenceChecker)
+								.addStatement(renderSetterWithArgument(attribute))
+								.endControlFlow()
+								.build())
+						.orElseGet(() -> renderSetterWithArgument(attribute)))
 				.collect(CodeBlock.joining("\n"));
 	}
 
-	private CodeBlock renderBuilderCall(Map.Entry<String, FieldSource> fieldWithSource) {
-		return CodeBlock.of(
-				".$L($L)",
-				fieldWithSource.getKey(),
-				renderFieldSource(fieldWithSource.getValue()));
+	private CodeBlock renderSetterWithArgument(AttributeViewModel attribute) {
+		return CodeBlock.of("builder.$L($L)", attribute.builderSetter(), renderSetterArgument(attribute));
 	}
 
-	private CodeBlock renderFieldSource(FieldSource fieldSource) {
-		if (fieldSource instanceof GetterFieldSource) {
-			return CodeBlock.of("message.$L()", ((GetterFieldSource) fieldSource).name());
-		} else if (fieldSource instanceof TranslatorFieldSource) {
-			TranslatorFieldSource source = (TranslatorFieldSource) fieldSource;
+	private CodeBlock renderSetterArgument(AttributeViewModel attribute) {
+		return CodeBlock.builder()
+				.add(attribute.translator()
+						.map(translator -> CodeBlock.of("$T.$L($L)"
+								, TypeName.get(translator.clazz())
+								, translator.method()
+								, renderSourceGetter(attribute)))
+						.orElseGet(() -> renderSourceGetter(attribute)))
+				.build();
+	}
 
-			return CodeBlock.of("$T.$L($L)",
-					TypeName.get(source.translator().location()),
-					source.translator().method(),
-					renderFieldSource(source.underlyingSource()));
-		} else {
-			throw new RuntimeException("Unknown field source, it's a bug:" + fieldSource);
-		}
+	private CodeBlock renderSourceGetter(AttributeViewModel attribute) {
+		return CodeBlock.of("message.$L()", attribute.sourceGetter());
 	}
 }

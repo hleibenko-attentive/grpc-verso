@@ -11,7 +11,6 @@ public interface MessageField {
 	}
 
 	int id();
-
 	String name();
 
 	@Value.Default
@@ -23,11 +22,8 @@ public interface MessageField {
 
 	interface Builder {
 		Builder id(int id);
-
 		Builder name(String name);
-
 		Builder isOptional(boolean isOptional);
-
 		Builder type(TypeMirror type);
 
 		MessageField build();

@@ -7,6 +7,9 @@ import io.github.heldev.verso.grpc.processor.common.MessageField;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -15,14 +18,18 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.OPTIONAL_SETTER;
+import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_AND_OPTIONAL_SETTERS;
+import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 public class TargetTypeTranslator {
 	private final Types typeUtils;
-	private final Elements elementsUtils;
+	private final Elements elementUtils;
 	private final DefinitionCatalog definitionCatalog;
 
 	public TargetTypeTranslator(
@@ -30,7 +37,7 @@ public class TargetTypeTranslator {
 			Elements elementsUtils,
 			DefinitionCatalog definitionCatalog) {
 		this.typeUtils = typeUtils;
-		this.elementsUtils = elementsUtils;
+		this.elementUtils = elementsUtils;
 		this.definitionCatalog = definitionCatalog;
 	}
 
@@ -43,31 +50,75 @@ public class TargetTypeTranslator {
 				.protoMessage(messageQualifiedName)
 				.builderType(builderFactoryMethod.getReturnType())
 				.builderFactoryMethod(builderFactoryMethod.getSimpleName())
-				.fields(buildFields(messageQualifiedName, typeElement))
+				.attributes(buildAttributes(messageQualifiedName, typeElement))
 				.build();
 	}
 
-	private List<TargetField> buildFields(String messageQualifiedName, TypeElement typeElement) {
+	private List<TargetField> buildAttributes(String messageQualifiedName, TypeElement type) {
 
-		return methodsIn(typeElement.getEnclosedElements()).stream()
+		return methodsIn(type.getEnclosedElements()).stream()
 //				.filter(method -> method.getModifiers().stream().noneMatch(modifier -> EnumSet.of(PRIVATE, STATIC).contains(modifier)))
 //				.filter(method -> method.getParameters().isEmpty())
 				.filter(method -> method.getAnnotation(VersoField.class) != null)
-				.map(method -> buildField(messageQualifiedName, method))
+				.map(method -> buildAttribute(messageQualifiedName, type, method))
 				.collect(toList());
 	}
 
-	private TargetField buildField(String messageQualifiedName, ExecutableElement method) {
-		MessageField field = findMessageFieldById(messageQualifiedName, method)
+	private TargetField buildAttribute(
+			String messageQualifiedName,
+			TypeElement type,
+			ExecutableElement attributeGetter) {
+		MessageField field = findMessageFieldById(messageQualifiedName, attributeGetter)
 				.orElseThrow(() -> new RuntimeException(
-						"can't find field in " + messageQualifiedName + " matching " + method));
+						"can't find field in " + messageQualifiedName + " matching " + attributeGetter));
 
-		return TargetField.builder()
-				.getter(method.getSimpleName().toString())
-				.type(method.getReturnType())
-				.protobufGetter(getProtobufGetter(field.name()))
-				.protobufType(field.type())
-				.build();
+		String protobufGetterSuffix = getProtobufGetterSuffix(field.name());
+
+		TargetField.Builder builder = TargetField.builder()
+				.getter(attributeGetter.getSimpleName().toString())
+				.type(attributeGetter.getReturnType())
+				.protobufGetter("get" + protobufGetterSuffix)
+				.protobufType(field.type());
+
+		if (field.isOptional()) {
+			builder.presenceCheckingMethod("has" + protobufGetterSuffix);
+			builder.optionalAttributeType(getOptionalAttributeType(getBuilderSetters(type, attributeGetter)));
+		}
+		return builder.build();
+	}
+
+	private OptionalAttributeType getOptionalAttributeType(List<ExecutableElement> builderSetters) {
+		if (containsOptionalArgumentSetter(builderSetters)) {
+			return builderSetters.size() > 1 ? VALUE_AND_OPTIONAL_SETTERS : OPTIONAL_SETTER;
+		} else {
+			return VALUE_SETTER;
+		}
+	}
+
+	private boolean containsOptionalArgumentSetter(List<ExecutableElement> builderSetters) {
+		return builderSetters.stream()
+				.anyMatch(setter -> setter.getParameters().stream().allMatch(this::isOptional));
+	}
+
+	private boolean isOptional(VariableElement parameter) {
+		DeclaredType rawOptionalType = typeUtils.getDeclaredType(
+				elementUtils.getTypeElement(Optional.class.getCanonicalName()));
+
+		return typeUtils.isAssignable(parameter.asType(), rawOptionalType);
+	}
+
+	private List<ExecutableElement> getBuilderSetters(TypeElement type, ExecutableElement attributeGetter) {
+		return getMethods(type)
+				.stream()
+				.filter(method -> method.getSimpleName().equals(attributeGetter.getSimpleName()))
+				.filter(method -> ! method.getModifiers().contains(PRIVATE))
+				.filter(method -> method.getParameters().size() == 1)
+				.collect(toList());
+	}
+
+	private List<ExecutableElement> getMethods(TypeElement type) {
+		TypeMirror builderType = getBuilderFactoryMethod(type).getReturnType();
+		return methodsIn(typeUtils.asElement(builderType).getEnclosedElements());
 	}
 
 	private Optional<MessageField> findMessageFieldById(
@@ -82,10 +133,10 @@ public class TargetTypeTranslator {
 	 * <a href="// https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/compiler/java/java_helpers.cc"
 	 * 		>proto conversion algorithm</a>
 	 */
-	private String getProtobufGetter(String protoFieldName) {
+	private String getProtobufGetterSuffix(String protoFieldName) {
 
 		//todo check digits
-		return "get" + Stream.of(protoFieldName.split("_"))
+		return Stream.of(protoFieldName.split("_"))
 				.map(this::capitalize)
 				 .collect(joining());
 	}

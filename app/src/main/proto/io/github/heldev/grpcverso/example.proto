@@ -13,5 +13,6 @@ message ExampleMessage {
 	string example_uuid = 3;
 	google.protobuf.Timestamp timestamp = 4;
 	optional string optional_string = 5;
-	string iso_date_time = 6;
+	optional string optional_uuid = 6;
+	string iso_date_time = 7;
 }

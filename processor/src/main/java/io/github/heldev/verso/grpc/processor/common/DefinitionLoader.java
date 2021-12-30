@@ -72,6 +72,7 @@ public class DefinitionLoader {
 				.id(field.getNumber())
 				.name(field.getName())
 				.type(getJavaTypeFromProtobufType(field))
+				.isOptional(field.getProto3Optional())
 				.build();
 	}
 

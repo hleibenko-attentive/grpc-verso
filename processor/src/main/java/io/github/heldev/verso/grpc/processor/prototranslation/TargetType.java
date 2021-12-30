@@ -6,10 +6,7 @@ import com.squareup.javapoet.TypeName;
 import org.immutables.value.Value;
 
 import javax.lang.model.element.Name;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleTypeVisitor8;
-import javax.lang.model.util.Types;
 import java.util.List;
 
 @Value.Immutable
@@ -21,7 +18,7 @@ public interface TargetType {
 	TypeMirror type();
 	TypeMirror builderType();
 	Name builderFactoryMethod();
-	List<TargetField> fields();
+	List<TargetField> attributes();
 
 	String protoMessage();
 
@@ -41,7 +38,7 @@ public interface TargetType {
 		Builder protoMessage(String protoMessage);
 		Builder builderType(TypeMirror builderType);
 		Builder builderFactoryMethod(Name builderFactoryMethod);
-		Builder fields(Iterable<? extends TargetField> fields);
+		Builder attributes(Iterable<? extends TargetField> fields);
 		TargetType build();
 	}
 }
