@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.optionalOr;
 import static io.github.heldev.verso.grpc.processor.common.Utils.optionalToStream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
@@ -26,7 +27,7 @@ public abstract class MessageDefinition {
 
 	public String qualifiedClass() {
 		return flattenAndJoinWithDots(
-				optionalToStream(context().javaPackage()),
+				optionalToStream(optionalOr(context().javaPackage(), context().protoPackage())),
 				optionalToStream(context().buildOuterJavaClassName()),
 				Stream.of(name()));
 	}

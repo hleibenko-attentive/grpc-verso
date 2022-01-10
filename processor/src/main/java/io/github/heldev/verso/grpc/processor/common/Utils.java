@@ -27,6 +27,13 @@ public abstract class Utils {
 				: Optional.empty();
 	}
 
+	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+	public static <T> Optional<T> optionalOr(Optional<T> a, Optional<T> b) {
+		return a.isPresent()
+				? a
+				: b;
+	}
+
 	/** always throws, return type here is only for type checking */
 	public static RuntimeException panic(String template, Object... arguments) {
 		throw new RuntimeException(format(template, arguments));
