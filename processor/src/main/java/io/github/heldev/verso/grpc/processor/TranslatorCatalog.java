@@ -8,7 +8,7 @@ import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.String.format;
+import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
@@ -33,8 +33,8 @@ public abstract class TranslatorCatalog {
 			TypeMirror from,
 			TypeMirror to,
 			Translator translator) {
-		return typeUtils.isSameType(translator.from(), from)
-				&& typeUtils.isSameType(translator.to(), to);
+		return typeUtils.isSameType(translator.source(), from)
+				&& typeUtils.isSameType(translator.target(), to);
 	}
 
 	private Optional<Translator> ensureAtMostOne(
@@ -44,11 +44,11 @@ public abstract class TranslatorCatalog {
 		if (matches.size() == 1) {
 			return matches.stream().findFirst();
 		} else {
-			throw new RuntimeException(format(
+			throw panic(
 					"there should be exactly one translator from %s to %s but found %s",
 					from,
 					to,
-					matches));
+					matches);
 		}
 	}
 }

@@ -1,8 +1,7 @@
 package io.github.heldev.verso.grpc.processor.common;
 
+import io.github.heldev.verso.grpc.processor.common.type.ProtoType;
 import org.immutables.value.Value;
-
-import javax.lang.model.type.TypeMirror;
 
 @Value.Immutable
 public interface MessageField {
@@ -18,13 +17,13 @@ public interface MessageField {
 		return false;
 	}
 
-	TypeMirror type();
+	ProtoType protoType();
 
 	interface Builder {
 		Builder id(int id);
 		Builder name(String name);
 		Builder isOptional(boolean isOptional);
-		Builder type(TypeMirror type);
+		Builder protoType(ProtoType type);
 
 		MessageField build();
 	}

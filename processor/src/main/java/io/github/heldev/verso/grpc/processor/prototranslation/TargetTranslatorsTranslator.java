@@ -3,16 +3,15 @@ package io.github.heldev.verso.grpc.processor.prototranslation;
 import io.github.heldev.verso.grpc.processor.TranslatorCatalog;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.mapping;
@@ -98,7 +97,7 @@ public class TargetTranslatorsTranslator {
 			TypeMirror to) {
 		return translatorCatalog
 				.findTranslator(typeUtils, from, to)
-				.orElseThrow(() -> new RuntimeException("can't find translator for " + from + " to " + to));
+				.orElseThrow(() -> panic("can't find translator for " + from + " to " + to));
 
 	}
 

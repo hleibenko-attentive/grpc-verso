@@ -18,7 +18,7 @@ import static io.github.heldev.verso.grpc.app.ExampleMessage.OPTIONAL_STRING_FIE
 import static io.github.heldev.verso.grpc.app.ExampleMessage.OPTIONAL_UUID_FIELD_NUMBER;
 import static io.github.heldev.verso.grpc.app.ExampleMessage.TIMESTAMP_FIELD_NUMBER;
 
-@VersoMessage("io.github.heldev.verso.grpc.app.ExampleMessage")
+@VersoMessage("io.github.heldev.grpcverso.ExampleMessage")
 @Value.Immutable
 public interface ExampleModel {
 

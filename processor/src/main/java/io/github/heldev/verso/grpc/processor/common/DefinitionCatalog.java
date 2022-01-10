@@ -2,26 +2,30 @@ package io.github.heldev.verso.grpc.processor.common;
 
 import org.immutables.value.Value;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 
 @Value.Immutable
 public abstract class DefinitionCatalog {
-	public static DefinitionCatalog of(Iterable<MessageDefinition> messageDefinitions) {
+	public static DefinitionCatalog of(Collection<MessageDefinition> definitions) {
 		return ImmutableDefinitionCatalog.builder()
-				.messageDefinitions(messageDefinitions)
+				.messagesByQualifiedName(indexByQualifiedName(definitions))
 				.build();
 	}
 
-	public Optional<MessageField> findFieldByMessageAndId(String messageQualifiedName, int fieldId) {
-		return messageDefinitions().stream()
-				.filter(message -> message.qualifiedName().equals(messageQualifiedName))
-				.findAny()
-				.flatMap(message -> message.findFieldById(fieldId));
+	private static Map<String, MessageDefinition> indexByQualifiedName(Collection<MessageDefinition> definitions) {
+		return definitions.stream().collect(toMap(MessageDefinition::qualifiedName, identity()));
 	}
 
+	public Optional<MessageDefinition> findByName(String qualifiedName) {
+		return Optional.ofNullable(messagesByQualifiedName().get(qualifiedName));
+	}
 
-	protected abstract List<MessageDefinition> messageDefinitions();
+	protected abstract Map<String, MessageDefinition> messagesByQualifiedName();
 }
 

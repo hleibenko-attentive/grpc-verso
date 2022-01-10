@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.heldev.samename;
+
+message Wrapped {
+	message ConflictName {
+		string s = 1;
+	}
+}

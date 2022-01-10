@@ -4,58 +4,55 @@ import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoType;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoTypeBasic;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoTypeDeclared;
 
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.optionalWhen;
 import static java.util.stream.Collectors.toList;
 
 public class DefinitionLoader {
-	private final Types typeUtils;
-	private final Elements elementUtils;
+	private final Supplier<FileDescriptorSet> descriptorSetSource;
 
-	public DefinitionLoader(Types typeUtils, Elements elementUtils) {
-		this.typeUtils = typeUtils;
-		this.elementUtils = elementUtils;
+	public DefinitionLoader(
+			Supplier<FileDescriptorSet> descriptorSetSource) {
+		this.descriptorSetSource = descriptorSetSource;
 	}
 
 	public DefinitionCatalog loadDefinitions() {
-		List<MessageDefinition> messageDefinitions = load()
+		List<MessageDefinition> definitions = descriptorSetSource.get()
 				.getFileList().stream()
 				.flatMap(this::extractMessages)
 				.collect(toList());
 
-		return DefinitionCatalog.of(messageDefinitions);
+		return DefinitionCatalog.of(definitions);
 	}
 
-	private FileDescriptorSet load() {
-		Path path = Paths.get("/tmp/grpc-verso/descriptors.protobin");
-		try {
-			return FileDescriptorSet.parseFrom(Files.readAllBytes(path));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+	private MessageDefinitionContext buildContext(FileDescriptorProto file) {
+		return MessageDefinitionContext.builder()
+				.protoFilepath(file.getName())
+				.protoPackage(optionalWhen(file.hasPackage(), file.getPackage()))
+				.isMultipleFiles(file.getOptions().getJavaMultipleFiles())
+				.javaPackage(optionalWhen(file.getOptions().hasJavaPackage(), file.getOptions().getJavaPackage()))
+				.outerClassName(optionalWhen(file.getOptions().hasJavaOuterClassname(), file.getOptions().getJavaOuterClassname()))
+				.build();
 	}
 
 	private Stream<MessageDefinition> extractMessages(FileDescriptorProto file) {
+		MessageDefinitionContext context = buildContext(file);
 		return file.getMessageTypeList().stream()
-				.map(message -> extractMessage(file, message));
+				.map(message -> extractMessage(context, message));
 	}
 
-	private MessageDefinition extractMessage(FileDescriptorProto file, DescriptorProto message) {
+	private MessageDefinition extractMessage(
+			MessageDefinitionContext context,
+			DescriptorProto message) {
 		return MessageDefinition.builder()
-				.protoPackage(file.getPackage())
-				.protoFile(file.getName())
-				.javaPackage(file.getOptions().getJavaPackage())
+				.context(context)
 				.name(message.getName())
 				.fields(extractFields(message.getFieldList()))
 				.build();
@@ -71,41 +68,47 @@ public class DefinitionLoader {
 		return MessageField.builder()
 				.id(field.getNumber())
 				.name(field.getName())
-				.type(getJavaTypeFromProtobufType(field))
+				.protoType(toProtoType(field))
 				.isOptional(field.getProto3Optional())
 				.build();
 	}
 
-	private TypeMirror getJavaTypeFromProtobufType(FieldDescriptorProto field) {
+	private ProtoType toProtoType(FieldDescriptorProto field) {
 		switch (field.getType()) {
-			case TYPE_DOUBLE:
-				return typeUtils.getPrimitiveType(TypeKind.DOUBLE);
-			case TYPE_FLOAT:
-				return typeUtils.getPrimitiveType(TypeKind.FLOAT);
-			case TYPE_INT64:
-			case TYPE_UINT64:
-				return typeUtils.getPrimitiveType(TypeKind.LONG);
+			case TYPE_BOOL:
+				return ProtoTypeBasic.BOOLEAN;
 			case TYPE_INT32:
 			case TYPE_UINT32:
-				return typeUtils.getPrimitiveType(TypeKind.INT);
-			case TYPE_BOOL:
-				return typeUtils.getPrimitiveType(TypeKind.BOOLEAN);
-			case TYPE_STRING:
-				return elementUtils.getTypeElement(String.class.getCanonicalName()).asType();
-			case TYPE_MESSAGE:
-				return elementUtils.getTypeElement(field.getTypeName().replaceFirst("^\\.", "com.")).asType();
-			case TYPE_BYTES:
-				return typeUtils.getArrayType(typeUtils.getPrimitiveType(TypeKind.BYTE));
-			case TYPE_FIXED64:
-			case TYPE_FIXED32:
-			case TYPE_GROUP:
-			case TYPE_ENUM:
-			case TYPE_SFIXED32:
-			case TYPE_SFIXED64:
 			case TYPE_SINT32:
+			case TYPE_FIXED32:
+			case TYPE_SFIXED32:
+				return ProtoTypeBasic.INT;
+			case TYPE_INT64:
+			case TYPE_UINT64:
 			case TYPE_SINT64:
+			case TYPE_FIXED64:
+			case TYPE_SFIXED64:
+				return ProtoTypeBasic.LONG;
+			case TYPE_FLOAT:
+				return ProtoTypeBasic.FLOAT;
+			case TYPE_DOUBLE:
+				return ProtoTypeBasic.DOUBLE;
+			case TYPE_BYTES:
+				return ProtoTypeBasic.BYTES;
+			case TYPE_STRING:
+				return ProtoTypeBasic.STRING;
+			case TYPE_MESSAGE:
+				return ProtoTypeDeclared.message(getQualifiedName(field.getTypeName()));
+			case TYPE_ENUM:
+				return ProtoTypeDeclared.enumType(getQualifiedName(field.getTypeName()));
+			case TYPE_GROUP:
 			default:
-				throw new RuntimeException(field + " type is not supported yet");
+				throw new RuntimeException(field + " type is not supported");
 		}
 	}
+
+	private String getQualifiedName(String field) {
+		return field.replaceFirst("^\\.", "");
+	}
+
 }

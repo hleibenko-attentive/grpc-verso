@@ -4,41 +4,53 @@ import org.immutables.value.Value;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.optionalToStream;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.joining;
+
+//todo nested definitions
 @Value.Immutable
-public interface MessageDefinition {
-	static Builder builder() {
+public abstract class MessageDefinition {
+	public static Builder builder() {
 		return ImmutableMessageDefinition.builder();
 	}
 
-	String protoPackage();
-
-	String protoFile();
-
-	String javaPackage();
-
-	String name();
-
-	default String qualifiedName() {
-		//todo nested messages
-		return javaPackage() + "." + name();
+	public String qualifiedName() {
+		return flattenAndJoinWithDots(
+				optionalToStream(context().protoPackage()),
+				context().outerMessageNames().stream(),
+				Stream.of(name()));
 	}
 
-	List<MessageField> fields();
+	public String qualifiedClass() {
+		return flattenAndJoinWithDots(
+				optionalToStream(context().javaPackage()),
+				optionalToStream(context().buildOuterJavaClassName()),
+				Stream.of(name()));
+	}
 
-	default Optional<MessageField> findFieldById(int fieldId) {
+	protected abstract MessageDefinitionContext context();
+
+	protected abstract String name();
+
+	public Optional<MessageField> findFieldById(int fieldId) {
 		return fields().stream().filter(field -> field.id() == fieldId).findAny();
 	}
 
-	interface Builder {
-		Builder protoPackage(String protoPackage);
+	protected abstract List<MessageField> fields();
 
-		Builder protoFile(String protoFile);
+	@SafeVarargs
+	private final String flattenAndJoinWithDots(Stream<String>... streams) {
+		return Stream.of(streams)
+				.flatMap(identity())
+				.collect(joining("."));
+	}
 
-		Builder javaPackage(String javaPackage);
-
+	public interface Builder {
+		Builder context(MessageDefinitionContext messageDefinitionContext);
 		Builder name(String name);
-
 		Builder fields(Iterable<? extends MessageField> fields);
 
 		MessageDefinition build();

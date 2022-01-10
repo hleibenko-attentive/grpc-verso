@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package io.heldev.samename;
+
+message ConflictName {
+	int32 s = 1;
+}

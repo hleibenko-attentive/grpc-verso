@@ -3,25 +3,28 @@ package io.github.heldev.verso.grpc.processor.prototranslation;
 import io.github.heldev.verso.grpc.interfaces.VersoField;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
+import io.github.heldev.verso.grpc.processor.common.MessageDefinition;
 import io.github.heldev.verso.grpc.processor.common.MessageField;
+import io.github.heldev.verso.grpc.processor.common.NamingConventions;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoType;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoTypeBasic;
+import io.github.heldev.verso.grpc.processor.common.type.ProtoTypeDeclared;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.OPTIONAL_SETTER;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_AND_OPTIONAL_SETTERS;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -43,48 +46,92 @@ public class TargetTypeTranslator {
 
 	public TargetType buildTargetType(TypeElement typeElement) {
 		ExecutableElement builderFactoryMethod = getBuilderFactoryMethod(typeElement);
-		String messageQualifiedName = typeElement.getAnnotation(VersoMessage.class).value();
+		MessageDefinition messageType = getMessageType(typeElement)
+				.orElseThrow(() -> panic("can't resolve proto definition for " + typeElement));
 
 		return TargetType.builder()
 				.type(typeElement.asType())
-				.protoMessage(messageQualifiedName)
+				.protoMessage(messageType.qualifiedClass())
 				.builderType(builderFactoryMethod.getReturnType())
 				.builderFactoryMethod(builderFactoryMethod.getSimpleName())
-				.attributes(buildAttributes(messageQualifiedName, typeElement))
+				.attributes(buildAttributes(messageType, typeElement))
 				.build();
 	}
 
-	private List<TargetField> buildAttributes(String messageQualifiedName, TypeElement type) {
+	private Optional<MessageDefinition> getMessageType(TypeElement typeElement) {
+		String qualifiedName = typeElement.getAnnotation(VersoMessage.class).value();
+		return definitionCatalog.findByName(qualifiedName);
+	}
+
+	private List<TargetField> buildAttributes(MessageDefinition messageType, TypeElement type) {
 
 		return methodsIn(type.getEnclosedElements()).stream()
 //				.filter(method -> method.getModifiers().stream().noneMatch(modifier -> EnumSet.of(PRIVATE, STATIC).contains(modifier)))
 //				.filter(method -> method.getParameters().isEmpty())
 				.filter(method -> method.getAnnotation(VersoField.class) != null)
-				.map(method -> buildAttribute(messageQualifiedName, type, method))
+				.map(method -> buildAttribute(messageType, type, method))
 				.collect(toList());
 	}
 
 	private TargetField buildAttribute(
-			String messageQualifiedName,
+			MessageDefinition messageType,
 			TypeElement type,
 			ExecutableElement attributeGetter) {
-		MessageField field = findMessageFieldById(messageQualifiedName, attributeGetter)
-				.orElseThrow(() -> new RuntimeException(
-						"can't find field in " + messageQualifiedName + " matching " + attributeGetter));
+		MessageField field = findMessageFieldById(messageType, attributeGetter)
+				.orElseThrow(() -> panic(
+						"can't find field in " + messageType + " matching " + attributeGetter));
 
-		String protobufGetterSuffix = getProtobufGetterSuffix(field.name());
+		String protobufGetterSuffix = NamingConventions.getProtobufGetterSuffix(field.name());
 
 		TargetField.Builder builder = TargetField.builder()
 				.getter(attributeGetter.getSimpleName().toString())
 				.type(attributeGetter.getReturnType())
 				.protobufGetter("get" + protobufGetterSuffix)
-				.protobufType(field.type());
+				.protobufType(toJavaType(field.protoType()));
 
 		if (field.isOptional()) {
 			builder.presenceCheckingMethod("has" + protobufGetterSuffix);
 			builder.optionalAttributeType(getOptionalAttributeType(getBuilderSetters(type, attributeGetter)));
 		}
 		return builder.build();
+	}
+
+	private TypeMirror toJavaType(ProtoType type) {
+		return type.isBasic()
+				? toJavaType((ProtoTypeBasic) type)
+				: toJavaType((ProtoTypeDeclared) type);
+	}
+
+	private TypeMirror toJavaType(ProtoTypeBasic type) {
+		switch (type) {
+			case BOOLEAN:
+				return typeUtils.getPrimitiveType(TypeKind.BOOLEAN);
+			case INT:
+				return typeUtils.getPrimitiveType(TypeKind.INT);
+			case LONG:
+				return typeUtils.getPrimitiveType(TypeKind.LONG);
+			case FLOAT:
+				return typeUtils.getPrimitiveType(TypeKind.FLOAT);
+			case DOUBLE:
+				return typeUtils.getPrimitiveType(TypeKind.DOUBLE);
+			case BYTES:
+				return typeUtils.getArrayType(typeUtils.getPrimitiveType(TypeKind.BYTE));
+			case STRING:
+				return typeUtils.getDeclaredType(elementUtils.getTypeElement(String.class.getCanonicalName()));
+			default:
+				throw panic("please report bug: unsupported type %s" + type);
+		}
+	}
+
+	private TypeMirror toJavaType(ProtoTypeDeclared type) {
+		if (! type.isEnum()) {
+			String qualifiedClass = definitionCatalog.findByName(type.qualifiedName())
+					.orElseThrow(() -> panic("can't resolve " + type))
+					.qualifiedClass();
+			return elementUtils.getTypeElement(qualifiedClass).asType();
+		} else {
+			throw panic("enums are not supported yet " + type);
+		}
 	}
 
 	private OptionalAttributeType getOptionalAttributeType(List<ExecutableElement> builderSetters) {
@@ -122,34 +169,11 @@ public class TargetTypeTranslator {
 	}
 
 	private Optional<MessageField> findMessageFieldById(
-			String messageQualifiedName,
+			MessageDefinition messageType,
 			ExecutableElement method) {
 
 		int fieldId = method.getAnnotation(VersoField.class).value();
-		return definitionCatalog.findFieldByMessageAndId(messageQualifiedName, fieldId);
-	}
-
-	/**
-	 * <a href="// https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/compiler/java/java_helpers.cc"
-	 * 		>proto conversion algorithm</a>
-	 */
-	private String getProtobufGetterSuffix(String protoFieldName) {
-
-		//todo check digits
-		return Stream.of(protoFieldName.split("_"))
-				.map(this::capitalize)
-				 .collect(joining());
-	}
-
-	private String capitalize(String s) {
-		return IntStream.concat(s.chars().limit(1).map(this::latinToUpperCase), s.chars().skip(1))
-				.collect(StringBuilder::new, (builder, c) -> builder.append((char) c), StringBuilder::append)
-				.toString();
-	}
-
-	private char latinToUpperCase(int c) {
-		int codePoint = 'a' <= c && c <= 'z' ? Character.toUpperCase(c) : c;
-		return (char) codePoint;
+		return messageType.findFieldById(fieldId);
 	}
 
 	private ExecutableElement getBuilderFactoryMethod(TypeElement typeElement) {
@@ -158,6 +182,6 @@ public class TargetTypeTranslator {
 				.filter(method -> method.getParameters().isEmpty())
 				.filter(method -> method.getSimpleName().contentEquals("builder"))
 				.findAny()
-				.orElseThrow(() -> new RuntimeException("builder method is missing"));
+				.orElseThrow(() -> panic("builder method is missing"));
 	}
 }

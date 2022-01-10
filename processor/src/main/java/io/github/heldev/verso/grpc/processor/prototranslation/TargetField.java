@@ -6,6 +6,8 @@ import org.immutables.value.Value;
 import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
+
 //todo it does not represent target fields anymore
 @Value.Immutable
 public abstract class TargetField {
@@ -25,9 +27,9 @@ public abstract class TargetField {
 	@Value.Check
 	protected void check() {
 		if (getter().trim().isEmpty()) {
-			throw new RuntimeException(this + " has an empty proto message");
+			panic(this + " has an empty proto message");
 		} else if (protobufGetter().trim().isEmpty()) {
-			throw new RuntimeException(this + " has an empty proto getter");
+			panic(this + " has an empty proto getter");
 		}
 	}
 

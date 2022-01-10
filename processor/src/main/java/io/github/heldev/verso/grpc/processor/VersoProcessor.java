@@ -1,9 +1,10 @@
 package io.github.heldev.verso.grpc.processor;
 
 import com.squareup.javapoet.JavaFile;
-import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
+import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
+import io.github.heldev.verso.grpc.processor.common.FileDescriptorSetSource;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsTranslator;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
@@ -32,10 +33,11 @@ public class VersoProcessor extends AbstractProcessor {
 	public synchronized void init(ProcessingEnvironment processingEnv) {
 		super.init(processingEnv);
 
-		translatorTranslator = new TranslatorTranslator(processingEnv.getElementUtils());
+		translatorTranslator = new TranslatorTranslator();
 		targetConverterRenderer = new TargetConverterRenderer();
 
 		DefinitionLoader definitionLoader = new DefinitionLoader(
+				new FileDescriptorSetSource(),
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils());
 

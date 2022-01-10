@@ -12,14 +12,14 @@ public interface Translator {
 
 	TypeMirror location();
 	String method();
-	TypeMirror from();
-	TypeMirror to();
+	TypeMirror source();
+	TypeMirror target();
 
 	interface Builder {
 		Builder location(TypeMirror location);
 		Builder method(String method);
-		Builder from(TypeMirror from);
-		Builder to(TypeMirror to);
+		Builder source(TypeMirror from);
+		Builder target(TypeMirror to);
 
 		Translator build();
 	}

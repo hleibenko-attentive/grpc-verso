@@ -9,6 +9,8 @@ import javax.lang.model.element.Name;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
+
 @Value.Immutable
 public interface TargetType {
 	static Builder builder() {
@@ -25,7 +27,7 @@ public interface TargetType {
 	@Value.Check
 	default void check() {
 		if (protoMessage().trim().isEmpty()) {
-			throw new RuntimeException(this + " has an empty proto message");
+			panic(this + " has an empty proto message");
 		}
 	}
 

@@ -4,6 +4,8 @@ option java_multiple_files = true;
 option java_package = "io.github.heldev.verso.grpc.app";
 
 import "google/protobuf/timestamp.proto";
+import "io/github/heldev/icandothis/@_R#$%^&11_ one!two fun__-_+d.proto";
+import "io/github/heldev/nopackage.proto";
 
 package io.github.heldev.grpcverso;
 
@@ -15,4 +17,22 @@ message ExampleMessage {
 	optional string optional_string = 5;
 	optional string optional_uuid = 6;
 	string iso_date_time = 7;
+	SameFileMessage sameFileMessage = 8;
+	SameFileMessage.SameFileNestedMessage sameFileNestedMessage = 9;
+	SameNestedMessage sameNestedMessage = 10;
+	SameNestedMessage.SameDoubleNestedMessage sameDoubleNestedMessage = 11;
+
+	message SameNestedMessage {
+		message SameDoubleNestedMessage {}
+	}
+
+	io.github.heldev.funname.grpc.OneMessage i_can_have_this_field = 100;
+	NoPackageMessage no_pack = 101;
+
+	string strings = 1000;
+	map<string, SameFileMessage> vvs = 10001;
+}
+
+message SameFileMessage {
+	message SameFileNestedMessage {}
 }

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package io.github.heldev.noj;
+option java_multiple_files=true;
+
+message NoJavaPackageMessage {
+	string s = 1;
+}
