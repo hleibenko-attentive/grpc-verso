@@ -37,9 +37,7 @@ public class VersoProcessor extends AbstractProcessor {
 		targetConverterRenderer = new TargetConverterRenderer();
 
 		DefinitionLoader definitionLoader = new DefinitionLoader(
-				new FileDescriptorSetSource(),
-				processingEnv.getTypeUtils(),
-				processingEnv.getElementUtils());
+				new FileDescriptorSetSource());
 
 		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
