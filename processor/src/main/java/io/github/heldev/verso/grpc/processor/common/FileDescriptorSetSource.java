@@ -10,11 +10,15 @@ import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 public class FileDescriptorSetSource implements Supplier<FileDescriptorSet> {
+	private final Path descriptorSetLocation;
+
+	public FileDescriptorSetSource(Path descriptorSetLocation) {
+		this.descriptorSetLocation = descriptorSetLocation;
+	}
 
 	public FileDescriptorSet get() {
-		Path path = Paths.get("/tmp/grpc-verso/descriptors.protobin");
 		try {
-			return FileDescriptorSet.parseFrom(Files.readAllBytes(path));
+			return FileDescriptorSet.parseFrom(Files.readAllBytes(descriptorSetLocation));
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}

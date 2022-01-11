@@ -10,7 +10,7 @@
 
 	<properties>
 		<grpc.version>1.40.1</grpc.version>
-		<protobuf.version>3.18.1</protobuf.version>
+		<protobuf.version>3.19.1</protobuf.version>
 		<protoc.version>3.17.3</protoc.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -91,7 +91,7 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>5.8.1</version>
+			<version>5.8.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -115,8 +115,8 @@
 					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
 					<writeDescriptorSet>true</writeDescriptorSet>
 					<includeDependenciesInDescriptorSet>true</includeDependenciesInDescriptorSet>
-					<descriptorSetFileName>descriptors.protobin</descriptorSetFileName>
-					<descriptorSetOutputDirectory>/tmp/grpc-verso</descriptorSetOutputDirectory>
+					<descriptorSetFileName>descriptorset.protobin</descriptorSetFileName>
+<!--					<descriptorSetOutputDirectory>/tmp/grpc-verso</descriptorSetOutputDirectory>-->
 				</configuration>
 				<executions>
 					<execution>
@@ -127,6 +127,16 @@
 						<phase>generate-sources</phase>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArgs>
+						<arg>-Averso.descriptorSetPath=${project.build.directory}/generated-resources/protobuf/descriptor-sets/descriptorset.protobin</arg>
+					</compilerArgs>
+				</configuration>
 			</plugin>
 
 			<plugin>

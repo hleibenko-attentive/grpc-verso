@@ -17,6 +17,7 @@ import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -37,7 +38,7 @@ public class VersoProcessor extends AbstractProcessor {
 		targetConverterRenderer = new TargetConverterRenderer();
 
 		DefinitionLoader definitionLoader = new DefinitionLoader(
-				new FileDescriptorSetSource());
+				new FileDescriptorSetSource(Paths.get(getDescriptorSetPath(processingEnv))));
 
 		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
@@ -49,6 +50,11 @@ public class VersoProcessor extends AbstractProcessor {
 				targetTypeTranslator,
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils());
+	}
+
+	private String getDescriptorSetPath(ProcessingEnvironment processingEnv) {
+		return processingEnv.getOptions()
+				.getOrDefault("verso.descriptorSetPath", "/tmp/grpc-verso/descriptorset.protobin");
 	}
 
 	@Override
