@@ -15,15 +15,16 @@ import java.util.stream.Stream;
 import static io.github.heldev.verso.grpc.processor.common.Utils.optionalWhen;
 import static java.util.stream.Collectors.toList;
 
-public class DefinitionLoader {
+public class DefinitionAdapter implements Supplier<DefinitionCatalog> {
 	private final Supplier<FileDescriptorSet> descriptorSetSource;
 
-	public DefinitionLoader(
+	public DefinitionAdapter(
 			Supplier<FileDescriptorSet> descriptorSetSource) {
 		this.descriptorSetSource = descriptorSetSource;
 	}
 
-	public DefinitionCatalog loadDefinitions() {
+	@Override
+	public DefinitionCatalog get() {
 		List<MessageDefinition> definitions = descriptorSetSource.get()
 				.getFileList().stream()
 				.flatMap(this::extractMessages)

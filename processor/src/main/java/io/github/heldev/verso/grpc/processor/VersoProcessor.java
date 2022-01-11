@@ -3,8 +3,8 @@ package io.github.heldev.verso.grpc.processor;
 import com.squareup.javapoet.JavaFile;
 import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
-import io.github.heldev.verso.grpc.processor.common.DefinitionLoader;
-import io.github.heldev.verso.grpc.processor.common.FileDescriptorSetSource;
+import io.github.heldev.verso.grpc.processor.common.DefinitionAdapter;
+import io.github.heldev.verso.grpc.processor.common.DescriptorSetSource;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsTranslator;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
@@ -37,14 +37,14 @@ public class VersoProcessor extends AbstractProcessor {
 		translatorTranslator = new TranslatorTranslator();
 		targetConverterRenderer = new TargetConverterRenderer();
 
-		DefinitionLoader definitionLoader = new DefinitionLoader(
-				new FileDescriptorSetSource(Paths.get(getDescriptorSetPath(processingEnv))));
+		DefinitionAdapter definitionAdapter = new DefinitionAdapter(
+				new DescriptorSetSource(Paths.get(getDescriptorSetPath(processingEnv))));
 
 		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils(),
-				//todo parsing doesn't seem to be the best activity for DI context initialization
-				definitionLoader.loadDefinitions());
+				//todo lazy supplier, parsing doesn't seem to be the best activity for DI context initialization
+				definitionAdapter.get());
 
 		targetTranslatorsTranslator = new TargetTranslatorsTranslator(
 				targetTypeTranslator,
