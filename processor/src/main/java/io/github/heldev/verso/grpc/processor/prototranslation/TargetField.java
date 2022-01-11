@@ -15,7 +15,7 @@ public abstract class TargetField {
 		return ImmutableTargetField.builder();
 	}
 
-	public abstract String getter();
+	public abstract String attribute();
 	public abstract TypeMirror type();
 	public abstract Optional<OptionalAttributeType> optionalAttributeType();
 	public abstract String protobufGetter();
@@ -26,7 +26,7 @@ public abstract class TargetField {
 
 	@Value.Check
 	protected void check() {
-		if (getter().trim().isEmpty()) {
+		if (attribute().trim().isEmpty()) {
 			panic(this + " has an empty proto message");
 		} else if (protobufGetter().trim().isEmpty()) {
 			panic(this + " has an empty proto getter");
@@ -35,7 +35,7 @@ public abstract class TargetField {
 
 
 	public interface Builder {
-		Builder getter(String name);
+		Builder attribute(String name);
 		Builder type(TypeMirror type);
 		Builder optionalAttributeType(OptionalAttributeType optionalAttributeType);
 		Builder protobufGetter(String protobufGetter);

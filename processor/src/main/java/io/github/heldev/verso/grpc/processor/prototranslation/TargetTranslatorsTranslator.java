@@ -58,7 +58,7 @@ public class TargetTranslatorsTranslator {
 			TargetField field) {
 
 		return AttributeViewModel.builder()
-				.builderSetter(field.getter()) //todo getter prefix
+				.builderSetter(field.attribute()) //todo getter prefix
 				.sourceGetter(field.protobufGetter())
 				.sourcePresenceCheckingMethod(field.presenceCheckingMethod())
 				.translator(findTranslator(translatorCatalog, field).map(this::toViewModel))

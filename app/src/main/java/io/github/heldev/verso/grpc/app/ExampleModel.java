@@ -29,6 +29,9 @@ public interface ExampleModel {
 	@VersoField(EXAMPLE_STRING_FIELD_NUMBER)
 	String string();
 
+	@VersoField(EXAMPLE_STRING_FIELD_NUMBER)
+	String getStringWithGetterPrefix();
+
 	@VersoField(EXAMPLE_INT64_FIELD_NUMBER)
 	long int64();
 
@@ -55,6 +58,7 @@ public interface ExampleModel {
 
 	interface Builder {
 		Builder string(String string);
+		Builder stringWithGetterPrefix(String string);
 		Builder int64(long int64);
 		Builder uuid(UUID uuid);
 		Builder optionalString(@SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<String> string);

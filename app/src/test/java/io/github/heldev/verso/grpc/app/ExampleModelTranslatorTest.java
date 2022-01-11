@@ -30,6 +30,7 @@ class ExampleModelTranslatorsTest {
 		ExampleModel.Builder result = ExampleModelTranslators.toBuilder(message);
 		ExampleModel.Builder expected = ExampleModel.builder()
 				.string("string")
+				.stringWithGetterPrefix("string")
 				.int64(64)
 				.uuid(uuid)
 				.date(LocalDate.parse("2007-12-03"))

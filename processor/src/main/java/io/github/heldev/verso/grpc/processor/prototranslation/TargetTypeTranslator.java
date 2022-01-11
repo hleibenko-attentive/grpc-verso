@@ -25,6 +25,8 @@ import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.OPTIONAL_SETTER;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_AND_OPTIONAL_SETTERS;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -76,24 +78,31 @@ public class TargetTypeTranslator {
 	private TargetField buildAttribute(
 			MessageDefinition messageType,
 			TypeElement type,
-			ExecutableElement attributeGetter) {
-		MessageField field = findMessageFieldById(messageType, attributeGetter)
+			ExecutableElement attributeAccessor) {
+		MessageField field = findMessageFieldById(messageType, attributeAccessor)
 				.orElseThrow(() -> panic(
-						"can't find field in " + messageType + " matching " + attributeGetter));
+						"can't find field in " + messageType + " matching " + attributeAccessor));
 
 		String protobufGetterSuffix = NamingConventions.getProtobufGetterSuffix(field.name());
 
 		TargetField.Builder builder = TargetField.builder()
-				.getter(attributeGetter.getSimpleName().toString())
-				.type(attributeGetter.getReturnType())
+				.attribute(getAttributeName(attributeAccessor))
+				.type(attributeAccessor.getReturnType())
 				.protobufGetter("get" + protobufGetterSuffix)
 				.protobufType(toJavaType(field.protoType()));
 
 		if (field.isOptional()) {
 			builder.presenceCheckingMethod("has" + protobufGetterSuffix);
-			builder.optionalAttributeType(getOptionalAttributeType(getBuilderSetters(type, attributeGetter)));
+			builder.optionalAttributeType(getOptionalAttributeType(getBuilderSetters(type, attributeAccessor)));
 		}
 		return builder.build();
+	}
+
+	private String getAttributeName(ExecutableElement attributeAccessor) {
+		String accessorName = attributeAccessor.getSimpleName().toString();
+		return accessorName.matches("^get\\p{javaUpperCase}.*")
+				? toLowerCase(accessorName.charAt(3)) + accessorName.substring(4)
+				: accessorName;
 	}
 
 	private TypeMirror toJavaType(ProtoType type) {
