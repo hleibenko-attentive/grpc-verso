@@ -8,10 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-public class DescriptorSetSource implements Supplier<FileDescriptorSet> {
+public class DescriptorSetFilepathSource implements Supplier<FileDescriptorSet> {
 	private final Path descriptorSetLocation;
 
-	public DescriptorSetSource(Path descriptorSetLocation) {
+	public DescriptorSetFilepathSource(Path descriptorSetLocation) {
 		this.descriptorSetLocation = descriptorSetLocation;
 	}
 
