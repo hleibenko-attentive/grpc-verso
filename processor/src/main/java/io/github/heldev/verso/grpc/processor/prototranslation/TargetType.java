@@ -21,6 +21,7 @@ public interface TargetType {
 	TypeMirror builderType();
 	Name builderFactoryMethod();
 	List<TargetField> attributes();
+	List<GeneratedAttribute> generatedAttributes();
 
 	String protoMessage();
 
@@ -41,6 +42,7 @@ public interface TargetType {
 		Builder builderType(TypeMirror builderType);
 		Builder builderFactoryMethod(Name builderFactoryMethod);
 		Builder attributes(Iterable<? extends TargetField> fields);
+		Builder generatedAttributes(Iterable<? extends GeneratedAttribute> fields);
 		TargetType build();
 	}
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.github.heldev.verso.grpc.processor.common.Utils.optionalWhen;
 import static io.github.heldev.verso.grpc.processor.common.Utils.panic;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
 import static java.util.Collections.emptyList;
@@ -19,21 +20,19 @@ import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 
 public class TargetTranslatorsTranslator {
-	private final TargetTypeTranslator targetTypeTranslator;
 	private final Types typeUtils;
 	private final Elements elementUtils;
 
 	public TargetTranslatorsTranslator(
-			TargetTypeTranslator targetTypeTranslator,
 			Types typeUtils,
 			Elements elementUtils) {
-		this.targetTypeTranslator = targetTypeTranslator;
 		this.typeUtils = typeUtils;
 		this.elementUtils = elementUtils;
 	}
 
-	public TargetTranslatorsViewModel translate(TranslatorCatalog translatorCatalog, TypeElement type) {
-		TargetType targetType = targetTypeTranslator.buildTargetType(type);
+	public TargetTranslatorsViewModel translate(
+			TranslatorCatalog translatorCatalog,
+			TargetType targetType) {
 
 		Map<Boolean, List<AttributeViewModel>> attributesByOptionalAttributeWithOnlyValueSettersStatus = targetType.attributes()
 				.stream()
@@ -49,7 +48,8 @@ public class TargetTranslatorsTranslator {
 				//todo null check
 				.sourceType(elementUtils.getTypeElement(targetType.protoMessage()).asType())
 				.optionalAttributesWithNonOptionalArguments(attributesByOptionalAttributeWithOnlyValueSettersStatus.getOrDefault(true, emptyList()))
-				.otherAttributes(attributesByOptionalAttributeWithOnlyValueSettersStatus.getOrDefault(false, emptyList()))
+				.generatedAttributes(targetType.generatedAttributes())
+				.regularAttributes(attributesByOptionalAttributeWithOnlyValueSettersStatus.getOrDefault(false, emptyList()))
 				.build();
 	}
 
@@ -71,9 +71,9 @@ public class TargetTranslatorsTranslator {
 		TypeMirror from = field.protobufType();
 		TypeMirror to = unwrapOptionalType(field);
 
-		return typeUtils.isSameType(from, to)
-				? Optional.empty()
-				: Optional.of(getTranslator(translatorCatalog, from, to));
+		return optionalWhen(
+				! typeUtils.isSameType(from, to),
+				() -> getTranslator(translatorCatalog, from, to));
 	}
 
 	private TypeMirror unwrapOptionalType(TargetField field) {

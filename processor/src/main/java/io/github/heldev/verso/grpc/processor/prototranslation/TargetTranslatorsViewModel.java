@@ -23,7 +23,8 @@ public interface TargetTranslatorsViewModel {
 	TypeMirror targetType();
 	TypeMirror sourceType();
 	List<AttributeViewModel> optionalAttributesWithNonOptionalArguments();
-	List<AttributeViewModel> otherAttributes();
+	List<GeneratedAttribute> generatedAttributes();
+	List<AttributeViewModel> regularAttributes();
 
 	interface Builder {
 		Builder javaPackage(String javaPackage);
@@ -32,7 +33,8 @@ public interface TargetTranslatorsViewModel {
 		Builder targetType(TypeMirror targetType);
 		Builder sourceType(TypeMirror sourceType);
 		Builder optionalAttributesWithNonOptionalArguments(Iterable<? extends AttributeViewModel> attributes);
-		Builder otherAttributes(Iterable<? extends AttributeViewModel> attributes);
+		Builder generatedAttributes(Iterable<? extends GeneratedAttribute> attributes);
+		Builder regularAttributes(Iterable<? extends AttributeViewModel> attributes);
 		TargetTranslatorsViewModel build();
 	}
 }

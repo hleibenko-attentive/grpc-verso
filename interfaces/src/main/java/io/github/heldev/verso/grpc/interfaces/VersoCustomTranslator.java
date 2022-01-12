@@ -8,6 +8,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 @Target(METHOD)
 @Retention(SOURCE)
-public @interface VersoFieldTranslator {
+public @interface VersoCustomTranslator {
 	String value() default "";
 }

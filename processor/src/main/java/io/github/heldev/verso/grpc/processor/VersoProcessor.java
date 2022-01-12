@@ -1,12 +1,15 @@
 package io.github.heldev.verso.grpc.processor;
 
 import com.squareup.javapoet.JavaFile;
-import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
+import io.github.heldev.verso.grpc.interfaces.VersoCustomTranslator;
+import io.github.heldev.verso.grpc.interfaces.VersoCustomGenerator;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.processor.common.DefinitionAdapter;
 import io.github.heldev.verso.grpc.processor.common.DescriptorSetFilepathSource;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetConverterRenderer;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsTranslator;
+import io.github.heldev.verso.grpc.processor.prototranslation.TargetTranslatorsViewModel;
+import io.github.heldev.verso.grpc.processor.prototranslation.TargetType;
 import io.github.heldev.verso.grpc.processor.prototranslation.TargetTypeTranslator;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -28,26 +31,28 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 public class VersoProcessor extends AbstractProcessor {
 	private TargetConverterRenderer targetConverterRenderer;
 	private TranslatorTranslator translatorTranslator;
+	private GeneratorTranslator generatorTranslator;
 	private TargetTranslatorsTranslator targetTranslatorsTranslator;
+	private TargetTypeTranslator targetTypeTranslator;
 
 	@Override
 	public synchronized void init(ProcessingEnvironment processingEnv) {
 		super.init(processingEnv);
 
 		translatorTranslator = new TranslatorTranslator();
+		generatorTranslator = new GeneratorTranslator();
 		targetConverterRenderer = new TargetConverterRenderer();
 
 		DefinitionAdapter definitionAdapter = new DefinitionAdapter(
 				new DescriptorSetFilepathSource(Paths.get(getDescriptorSetPath(processingEnv))));
 
-		TargetTypeTranslator targetTypeTranslator = new TargetTypeTranslator(
+		targetTypeTranslator = new TargetTypeTranslator(
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils(),
 				//todo lazy supplier, parsing doesn't seem to be the best activity for DI context initialization
 				definitionAdapter.get());
 
 		targetTranslatorsTranslator = new TargetTranslatorsTranslator(
-				targetTypeTranslator,
 				processingEnv.getTypeUtils(),
 				processingEnv.getElementUtils());
 	}
@@ -59,14 +64,22 @@ public class VersoProcessor extends AbstractProcessor {
 
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-		generateTranslators(roundEnv, translatorTranslator.loadFieldTranslators(roundEnv));
+		generateTranslators(roundEnv,
+				translatorTranslator.loadFieldTranslators(roundEnv),
+				generatorTranslator.loadGenerators(roundEnv));
 		return true;
 	}
 
-	private void generateTranslators(RoundEnvironment roundEnv, TranslatorCatalog translatorCatalog) {
+	private void generateTranslators(
+			RoundEnvironment roundEnv,
+			TranslatorCatalog translatorCatalog,
+			GeneratorCatalog generatorCatalog) {
+
 		typesIn(roundEnv.getElementsAnnotatedWith(VersoMessage.class))
 				.forEach(type -> {
-					JavaFile file = targetConverterRenderer.render(targetTranslatorsTranslator.translate(translatorCatalog, type));
+					TargetType targetType = targetTypeTranslator.buildTargetType(generatorCatalog, type);
+					TargetTranslatorsViewModel translatorView = targetTranslatorsTranslator.translate(translatorCatalog, targetType);
+					JavaFile file = targetConverterRenderer.render(translatorView);
 					try {
 						file.writeTo(processingEnv.getFiler());
 					} catch (IOException e) {
@@ -79,7 +92,7 @@ public class VersoProcessor extends AbstractProcessor {
 
 	@Override
 	public Set<String> getSupportedAnnotationTypes() {
-		return Stream.of(VersoFieldTranslator.class, VersoMessage.class)
+		return Stream.of(VersoCustomTranslator.class, VersoMessage.class, VersoCustomGenerator.class)
 				.map(Class::getCanonicalName)
 				.collect(toSet());
 	}

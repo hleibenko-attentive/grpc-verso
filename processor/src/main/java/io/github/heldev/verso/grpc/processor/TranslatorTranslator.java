@@ -1,11 +1,10 @@
 package io.github.heldev.verso.grpc.processor;
 
-import io.github.heldev.verso.grpc.interfaces.VersoFieldTranslator;
+import io.github.heldev.verso.grpc.interfaces.VersoCustomTranslator;
 import io.github.heldev.verso.grpc.processor.prototranslation.Translator;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.util.Elements;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -15,12 +14,12 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 public class TranslatorTranslator {
 
 	public TranslatorCatalog loadFieldTranslators(RoundEnvironment roundEnv) {
-		Collection<Translator> translators = methodsIn(roundEnv.getElementsAnnotatedWith(VersoFieldTranslator.class)).stream()
+		Collection<Translator> translators = methodsIn(roundEnv.getElementsAnnotatedWith(VersoCustomTranslator.class)).stream()
 				.peek(method -> {if (method.getParameters().size() != 1) {
 					throw panic("field translators should have exactly 1 parameter " + method);
 				}})
-				.map(this::buildTranslator
-				).collect(Collectors.toList());
+				.map(this::buildTranslator)
+				.collect(Collectors.toList());
 
 		return TranslatorCatalog.of(translators);
 	}

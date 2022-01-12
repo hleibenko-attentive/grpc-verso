@@ -38,4 +38,8 @@ public abstract class Utils {
 	public static RuntimeException panic(String template, Object... arguments) {
 		throw new RuntimeException(format(template, arguments));
 	}
+
+	public static <T> T panicV(String template, Object... arguments) {
+		throw new RuntimeException(format(template, arguments));
+	}
 }

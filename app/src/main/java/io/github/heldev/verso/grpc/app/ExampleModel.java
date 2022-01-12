@@ -1,5 +1,6 @@
 package io.github.heldev.verso.grpc.app;
 
+import io.github.heldev.verso.grpc.interfaces.VersoGenerated;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
 import io.github.heldev.verso.grpc.interfaces.VersoField;
 import org.immutables.value.Value;
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.github.heldev.verso.grpc.app.Customizations.HARDCODED_UUID;
 import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_INT64_FIELD_NUMBER;
 import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_STRING_FIELD_NUMBER;
 import static io.github.heldev.verso.grpc.app.ExampleMessage.EXAMPLE_UUID_FIELD_NUMBER;

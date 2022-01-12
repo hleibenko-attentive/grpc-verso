@@ -1,7 +1,10 @@
 package io.github.heldev.verso.grpc.processor.prototranslation;
 
 import io.github.heldev.verso.grpc.interfaces.VersoField;
+import io.github.heldev.verso.grpc.interfaces.VersoGenerated;
 import io.github.heldev.verso.grpc.interfaces.VersoMessage;
+import io.github.heldev.verso.grpc.processor.Generator;
+import io.github.heldev.verso.grpc.processor.GeneratorCatalog;
 import io.github.heldev.verso.grpc.processor.common.DefinitionCatalog;
 import io.github.heldev.verso.grpc.processor.common.MessageDefinition;
 import io.github.heldev.verso.grpc.processor.common.MessageField;
@@ -26,7 +29,6 @@ import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAtt
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_AND_OPTIONAL_SETTERS;
 import static io.github.heldev.verso.grpc.processor.prototranslation.OptionalAttributeType.VALUE_SETTER;
 import static java.lang.Character.toLowerCase;
-import static java.lang.Character.toUpperCase;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -46,7 +48,7 @@ public class TargetTypeTranslator {
 		this.definitionCatalog = definitionCatalog;
 	}
 
-	public TargetType buildTargetType(TypeElement typeElement) {
+	public TargetType buildTargetType(GeneratorCatalog generatorCatalog, TypeElement typeElement) {
 		ExecutableElement builderFactoryMethod = getBuilderFactoryMethod(typeElement);
 		MessageDefinition messageType = getMessageType(typeElement)
 				.orElseThrow(() -> panic("can't resolve proto definition for " + typeElement));
@@ -57,6 +59,7 @@ public class TargetTypeTranslator {
 				.builderType(builderFactoryMethod.getReturnType())
 				.builderFactoryMethod(builderFactoryMethod.getSimpleName())
 				.attributes(buildAttributes(messageType, typeElement))
+				.generatedAttributes(buildGeneratedAttributes(generatorCatalog, typeElement))
 				.build();
 	}
 
@@ -192,5 +195,31 @@ public class TargetTypeTranslator {
 				.filter(method -> method.getSimpleName().contentEquals("builder"))
 				.findAny()
 				.orElseThrow(() -> panic("builder method is missing"));
+	}
+
+	private List<GeneratedAttribute> buildGeneratedAttributes(
+			GeneratorCatalog generatorCatalog,
+			TypeElement type) {
+		return methodsIn(type.getEnclosedElements()).stream()
+				.filter(method -> method.getAnnotation(VersoGenerated.class) != null)
+				.map(attributeAccessor -> buildGeneratedAttribute(generatorCatalog, attributeAccessor))
+				.collect(toList());
+	}
+
+	private GeneratedAttribute buildGeneratedAttribute(
+			GeneratorCatalog generatorCatalog,
+			ExecutableElement attributeAccessor) {
+
+		return GeneratedAttribute.builder()
+				.name(getAttributeName(attributeAccessor))
+				.generator(getGenerator(generatorCatalog, attributeAccessor))
+				.build();
+	}
+
+	private Generator getGenerator(GeneratorCatalog generatorCatalog, ExecutableElement attributeAccessor) {
+		String generatorName = attributeAccessor.getAnnotation(VersoGenerated.class).value();
+
+		return generatorCatalog.findByName(generatorName)
+				.orElseThrow(() -> panic("can't find a generator for " + attributeAccessor));
 	}
 }
